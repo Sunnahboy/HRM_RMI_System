@@ -1,4 +1,4 @@
-package common.model;
+package com.hrmrmi.common.model;
 
 public class Leave {
 }

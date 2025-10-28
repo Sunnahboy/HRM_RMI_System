@@ -1,4 +1,4 @@
 package com.hrmrmi.common.model;
 
-public class Employee {
+public class Report {
 }
