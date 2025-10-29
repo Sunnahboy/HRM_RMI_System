@@ -1,4 +1,4 @@
-package client.gui;
+package com.hrmrmi.client.gui;
 
 public class HRGUI {
 }

@@ -8,6 +8,7 @@ import com.hrmrmi.common.model.*;
 
 
 public interface HRMService extends Remote{
+
     //shared func
     String login(String username, String password) throws RemoteException;
 
@@ -28,7 +29,7 @@ public interface HRMService extends Remote{
 
     List<Employee> searchProfile(String keyword) throws RemoteException;
 
-    boolean fireEmployee(String employeeID, String reason);
+    boolean fireEmployee(String employeeID, String reason) throws RemoteException;
 
 
 
