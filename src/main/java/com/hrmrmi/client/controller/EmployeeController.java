@@ -1,4 +1,4 @@
-package client.controller;
+package com.hrmrmi.client.controller;
 
 public class EmployeeController {
 }
