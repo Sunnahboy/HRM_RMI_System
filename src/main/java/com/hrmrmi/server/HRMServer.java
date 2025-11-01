@@ -1,4 +1,4 @@
-package server;
+package com.hrmrmi.server;
 
 public class HRMServer {
 }

@@ -1,4 +1,4 @@
-package client.gui.components;
+package com.hrmrmi.client.gui.components;
 
 public class LoginPanel {
 }
