@@ -6,13 +6,18 @@ import com.hrmrmi.common.model.Leave;
 import com.hrmrmi.common.model.Report;
 
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 
-public class HRMServiceImpl implements HRMService {
+public class HRMServiceImpl extends UnicastRemoteObject implements HRMService {
+    protected HRMServiceImpl() throws RemoteException {
+        super();
+    }
     //shared funcs
+    //changed string to boolean and added a return match
     @Override
-    public String login(String username, String password) throws RemoteException {
-        return "";
+    public boolean login(String username, String password) throws RemoteException {
+        return "admin".equals(username) && "admin".equals(password);
     }
 
     @Override

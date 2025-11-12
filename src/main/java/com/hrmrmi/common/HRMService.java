@@ -10,7 +10,7 @@ import com.hrmrmi.common.model.*;
 public interface HRMService extends Remote{
 
     //shared func
-    String login(String username, String password) throws RemoteException;
+    boolean login(String username, String password) throws RemoteException;
 
     boolean applyLeave(String employeeID, Leave leaveApplication) throws RemoteException;
 
