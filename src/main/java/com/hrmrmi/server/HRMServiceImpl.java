@@ -107,6 +107,12 @@ public class HRMServiceImpl extends UnicastRemoteObject implements HRMService {
     }
 
     @Override
+    public List<Employee> getAllEmployees() throws RemoteException {
+        System.out.println("Collecting all employees record...");
+        return empRepo.getAllEmployees();
+    }
+
+    @Override
     public boolean fireEmployee(String employeeID, String reason) throws RemoteException {
         int id = Integer.parseInt(employeeID);
         return empRepo.deleteEmployee(id);

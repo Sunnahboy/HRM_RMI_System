@@ -106,11 +106,11 @@ public class EmployeeRepository {
                         rs.getString("lastName"),
                         rs.getString("email"),
                         rs.getString("department"),
-                        rs.getString("PassportNumber"),
+                        rs.getString("ic_passport_num"),
                         rs.getString("position"),
                         rs.getInt("leaveBalance"),
                         rs.getDouble("salary"),
-                        rs.getString("password"),
+                        null,
                         rs.getString("role")
                 );
                         list.add(emp);

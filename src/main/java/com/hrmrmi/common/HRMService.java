@@ -30,6 +30,8 @@ public interface HRMService extends Remote{
 
     List<Employee> searchProfile(String keyword) throws RemoteException;
 
+    List<Employee> getAllEmployees() throws RemoteException;
+
     boolean fireEmployee(String employeeID, String reason) throws RemoteException;
 
 
