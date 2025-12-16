@@ -29,8 +29,10 @@ public class HRMServiceImpl extends UnicastRemoteObject implements HRMService {
     //shared funcs
     //changed string to boolean and added a return match
     @Override
-    public boolean login(String username, String password) throws RemoteException {
-        return "admin".equals(username) && "admin".equals(password);
+    public Employee login(String email, String password) throws RemoteException {
+        System.out.println("Login attempt for Email: " + email);
+
+        return empRepo.login(email, password);
     }
 
     @Override

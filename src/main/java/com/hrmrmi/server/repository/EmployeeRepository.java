@@ -9,6 +9,38 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class EmployeeRepository {
+
+    public Employee login(String email, String password) {
+        String sql = "SELECT * FROM employees WHERE email = ? AND password = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+            ps.setString(2, password);
+
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()) {
+                return new Employee(
+                        rs.getInt("id"),
+                        rs.getString("firstName"),
+                        rs.getString("lastName"),
+                        rs.getString("email"),
+                        rs.getString("department"),
+                        rs.getString("ic_passport_num"),
+                        rs.getString("position"),
+                        rs.getInt("leaveBalance"),
+                        rs.getDouble("salary"),
+                        rs.getString("password"),
+                        rs.getString("role")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public boolean registerEmployee(Employee emp) {
         String sql = "INSERT INTO employees (firstName, lastName, email, department, ic_passport_num, position, leaveBalance, salary, password, role) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
