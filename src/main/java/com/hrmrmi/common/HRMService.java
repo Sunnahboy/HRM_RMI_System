@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.hrmrmi.common.model.*;
 
-
 public interface HRMService extends Remote{
 
     //shared func
@@ -30,9 +29,9 @@ public interface HRMService extends Remote{
 
     List<Employee> searchProfile(String keyword) throws RemoteException;
 
+    List<Employee> getAllEmployees() throws RemoteException;
+
     boolean fireEmployee(String employeeID, String reason) throws RemoteException;
 
-
-
-
+//    boolean updateEmployeeStatus(String employeeID, String newDept, String newPosition, double newSalary) throws RemoteException;
 }
