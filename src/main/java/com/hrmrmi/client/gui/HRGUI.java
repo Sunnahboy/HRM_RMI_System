@@ -10,6 +10,7 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -79,11 +80,8 @@ public class HRGUI extends Application {
                     );
                     if(success) {
                         new Alert(Alert.AlertType.INFORMATION, "Success!").show();
-                        fName.clear();
-                        lName.clear();
-                        icNum.clear();
-                        deptField.clear();
-                        posField.clear();
+                        // Clear fields
+                        fName.clear(); lName.clear(); icNum.clear(); deptField.clear(); posField.clear();
                     } else {
                         new Alert(Alert.AlertType.ERROR, "Failed.").show();
                     }
@@ -96,14 +94,22 @@ public class HRGUI extends Application {
             tabPane.getTabs().add(regTab);
 
 
-            // --- TAB 3: EMPLOYEE DIRECTORY (The New Part!) ---
+            // --- TAB 3: EMPLOYEE DIRECTORY ---
             VBox listBox = new VBox(10);
             listBox.setPadding(new Insets(10));
 
-            // Create the Table
+            // A. Search Bar
+            HBox searchBox = new HBox(10);
+            TextField searchField = new TextField();
+            searchField.setPromptText("Search Name or Dept...");
+            Button btnSearch = new Button("Search");
+            Button btnReset = new Button("Reset");
+
+            searchBox.getChildren().addAll(searchField, btnSearch, btnReset);
+
+            // B. The Table
             TableView<Employee> table = new TableView<>();
 
-            // Define Columns (Must match getters in Employee.java)
             TableColumn<Employee, Integer> colId = new TableColumn<>("ID");
             colId.setCellValueFactory(new PropertyValueFactory<>("id"));
 
@@ -122,31 +128,68 @@ public class HRGUI extends Application {
             TableColumn<Employee, String> colEmail = new TableColumn<>("Email");
             colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
 
-            table.getColumns().addAll(colId, colName, colLast, colDept, colRole, colEmail);
+            // Added Salary Column so you can verify changes later
+            TableColumn<Employee, Double> colSalary = new TableColumn<>("Salary");
+            colSalary.setCellValueFactory(new PropertyValueFactory<>("salary"));
 
-            // "Load Data" Button
-            Button btnRefresh = new Button("Refresh List");
-            btnRefresh.setOnAction(e -> {
+            table.getColumns().addAll(colId, colName, colLast, colDept, colRole, colEmail, colSalary);
+
+            // C. FIRE BUTTON
+            Button btnFire = new Button("Fire Selected Employee");
+            btnFire.setStyle("-fx-background-color: #ff4444; -fx-text-fill: white;");
+
+            btnFire.setOnAction(e -> {
+                Employee selected = table.getSelectionModel().getSelectedItem();
+                if (selected == null) {
+                    new Alert(Alert.AlertType.WARNING, "Select an employee to fire.").show();
+                    return;
+                }
+
+                TextInputDialog dialog = new TextInputDialog();
+                dialog.setTitle("Confirm Termination");
+                dialog.setHeaderText("Firing: " + selected.getFirstName());
+                dialog.setContentText("Reason:");
+
+                dialog.showAndWait().ifPresent(reason -> {
+                    if (reason.trim().isEmpty()) return;
+                    try {
+                        if (service.fireEmployee(String.valueOf(selected.getId()), reason)) {
+                            new Alert(Alert.AlertType.INFORMATION, "Terminated.").show();
+                            table.getItems().remove(selected);
+                        }
+                    } catch (Exception ex) { ex.printStackTrace(); }
+                });
+            });
+
+            // D. Button Logic (Search & Reset)
+            btnSearch.setOnAction(e -> {
                 try {
-                    // 1. Ask Server for the List
-                    List<Employee> list = service.getAllEmployees();
-                    // 2. Convert to JavaFX Format
-                    ObservableList<Employee> fxList = FXCollections.observableArrayList(list);
-                    // 3. Put into Table
-                    table.setItems(fxList);
+                    List<Employee> results = service.searchProfile(searchField.getText());
+                    table.setItems(FXCollections.observableArrayList(results));
                 } catch (Exception ex) { ex.printStackTrace(); }
             });
 
-            // Auto-load data when opening
-            btnRefresh.fire();
+            btnReset.setOnAction(e -> {
+                try {
+                    searchField.clear();
+                    List<Employee> all = service.getAllEmployees();
+                    table.setItems(FXCollections.observableArrayList(all));
+                } catch (Exception ex) { ex.printStackTrace(); }
+            });
 
-            listBox.getChildren().addAll(new Label("All Employees"), btnRefresh, table);
+            // Initial Load
+            btnReset.fire();
+
+            // Add everything to List Box
+            listBox.getChildren().addAll(new Label("Employee Directory"), searchBox, table, btnFire);
+
+            // Add Tab
             Tab listTab = new Tab("Directory", listBox);
             listTab.setClosable(false);
             tabPane.getTabs().add(listTab);
         }
 
-        Scene scene = new Scene(tabPane, 750, 500); // Made window slightly wider
+        Scene scene = new Scene(tabPane, 800, 500);
         primaryStage.setTitle("HRM Dashboard - " + currentUser.getFirstName());
         primaryStage.setScene(scene);
         primaryStage.show();

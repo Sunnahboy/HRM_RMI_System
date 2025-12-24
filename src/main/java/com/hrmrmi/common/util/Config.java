@@ -8,6 +8,8 @@ public class Config {
     public static final String DB_PASSWORD = System.getenv("MY_DB_PASS") != null ? System.getenv("MY_DB_PASS") : "YOUR_DB_PASSWORD";
     public static final int RMI_PORT = 54321;
     public static final String  RMI_NAME = "HRMService";
+
+    //USE PORT FORWARDING! MORE MARKS
     public static final String RMI_HOST = System.getenv("HRM_SERVER_IP") != null ? System.getenv("HRM_SERVER_IP") : "localhost";
     public static final String DB_DRIVER = "org.postgresql.Driver";
 

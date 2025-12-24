@@ -103,7 +103,8 @@ public class HRMServiceImpl extends UnicastRemoteObject implements HRMService {
 
     @Override
     public List<Employee> searchProfile(String keyword) throws RemoteException {
-        return empRepo.getAllEmployees();
+        System.out.println("Searching for: " + keyword);
+        return empRepo.searchEmployee(keyword);
     }
 
     @Override
@@ -114,7 +115,15 @@ public class HRMServiceImpl extends UnicastRemoteObject implements HRMService {
 
     @Override
     public boolean fireEmployee(String employeeID, String reason) throws RemoteException {
-        int id = Integer.parseInt(employeeID);
-        return empRepo.deleteEmployee(id);
+        System.out.println("Firing Employee ID: " + employeeID);
+        System.out.println("Reason: " + reason);
+
+        try {
+            int id = Integer.parseInt(employeeID);
+            return empRepo.deleteEmployee(id);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid ID format");
+            return false;
+        }
     }
 }
