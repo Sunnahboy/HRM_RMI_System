@@ -1,7 +1,46 @@
+//plugins {
+//    id 'java'
+//    id 'application'
+//    id 'org.openjfx.javafxplugin' version '0.1.0'
+//}
+//
+//group = 'org.example'
+//version = '1.0-SNAPSHOT'
+//
+//repositories {
+//    mavenCentral()
+//}
+//
+//javafx {
+//    version = "17.0.6"
+//    modules = ['javafx.controls', 'javafx.fxml']
+//}
+//
+//dependencies {
+//    //javafx
+//    implementation 'org.openjfx:javafx-controls:17.0.6'
+//    implementation 'org.openjfx:javafx-fxml:17.0.6'
+//
+//    //postgres
+//    implementation 'org.postgresql:postgresql:42.6.0'
+//
+//    testImplementation platform('org.junit:junit-bom:5.10.0')
+//    testImplementation 'org.junit.jupiter:junit-jupiter'
+//    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+//}
+//
+//test {
+//    useJUnitPlatform()
+//}
+//
+//application {
+//    mainClass = 'com.hrmrmi.client.HRClient'
+//}
+
 plugins {
     id 'java'
     id 'application'
-    id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'org.openjfx.javafxplugin' version '0.0.13'
 }
 
 group = 'org.example'
@@ -11,22 +50,23 @@ repositories {
     mavenCentral()
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
 javafx {
     version = "17.0.6"
-    modules = ['javafx.controls', 'javafx.fxml']
+    modules = [ 'javafx.controls', 'javafx.fxml' ]
 }
 
 dependencies {
-    //javafx
-    implementation 'org.openjfx:javafx-controls:17.0.6'
-    implementation 'org.openjfx:javafx-fxml:17.0.6'
-
-    //postgres
+    // PostgreSQL
     implementation 'org.postgresql:postgresql:42.6.0'
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 test {

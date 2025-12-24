@@ -18,7 +18,7 @@ public class HRMServiceImpl extends UnicastRemoteObject implements HRMService {
     private final LeaveRepository leaveRepo;
     private final ReportRepository reportRepo;
 
-    protected HRMServiceImpl() throws RemoteException {
+    public HRMServiceImpl() throws RemoteException {
         super();
 
         this.empRepo = new EmployeeRepository();

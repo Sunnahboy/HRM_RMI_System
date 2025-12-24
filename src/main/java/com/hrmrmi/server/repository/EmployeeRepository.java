@@ -79,7 +79,7 @@ public class EmployeeRepository {
                         rs.getString("lastName"),
                         rs.getString("email"),
                         rs.getString("department"),
-                        rs.getString("PassportNumber"),
+                        rs.getString("ic_passport_num"),
                         rs.getString("position"),
                         rs.getInt("leaveBalance"),
                         rs.getDouble("salary"),
@@ -96,7 +96,7 @@ public class EmployeeRepository {
     public List<Employee> searchEmployee(String keyword) {
         List <Employee> list = new ArrayList<>();
 
-        String sql = "SELECT * FROM employees WHERE firstname ILIKE ? OR lastname ILIKE ? department ILIKE ?";
+        String sql = "SELECT * FROM employees WHERE firstname ILIKE ? OR lastname ILIKE ? OR department ILIKE ?";
 
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
