@@ -1,9 +1,10 @@
 package com.hrmrmi.client.gui;
 
 import com.hrmrmi.common.HRMService;
-import com.hrmrmi.common.model.Employee;
+import com.hrmrmi.common.model.*;
 import com.hrmrmi.common.util.Config;
 import javafx.application.Application;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -252,6 +253,92 @@ public class HRGUI extends Application {
             Tab listTab = new Tab("Directory", listBox);
             listTab.setClosable(false);
             tabPane.getTabs().add(listTab);
+
+            //Tab 4: leave reqs
+            VBox leaveBox = new VBox(10);
+            leaveBox.setPadding(new Insets(10));
+
+            //table
+            TableView<Leave>  leaveTable = new TableView<>();
+
+            TableColumn<Leave, Integer> colLId = new TableColumn<>("Leave ID");
+            colLId.setCellValueFactory(new PropertyValueFactory<>("leaveId"));
+
+            TableColumn<Leave, Integer> colEmpId = new TableColumn<>("Emp ID");
+            colEmpId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
+
+            TableColumn<Leave, String> colStart = new TableColumn<>("Start Date");
+            colStart.setCellValueFactory(cellData ->
+                    new SimpleStringProperty(cellData.getValue().getStartDate().toString()));
+
+            TableColumn<Leave, String> colEnd = new TableColumn<>("End Date");
+            colEnd.setCellValueFactory(cellData ->
+                    new SimpleStringProperty(cellData.getValue().getEndDate().toString()));
+
+            TableColumn<Leave, String> colReason = new TableColumn<>("Reason");
+            colReason.setCellValueFactory(new PropertyValueFactory<>("reason"));
+
+            TableColumn<Leave, String> colStatus = new TableColumn<>("Status");
+            colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
+
+            leaveTable.getColumns().addAll(colLId, colEmpId, colStart, colEnd, colReason, colStatus);
+
+            //refresh
+            Button btnRefreshLeaves = new Button("Refresh Requests");
+            btnRefreshLeaves.setOnAction(e -> {
+                try {
+                    List<Leave> pending = service.getAllPendingLeaves();
+                    leaveTable.setItems(FXCollections.observableArrayList(pending));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            });
+
+            //action btns
+            Button btnApprove = new Button("Approve");
+            btnApprove.setStyle("-fx-background-colour: #4CAF50; -fx-text-fill: white;");
+
+            Button btnReject = new Button("Reject");
+            btnReject.setStyle("-fx-background-colour: #f44336; -fx-text-fill: white;");
+
+            btnApprove.setOnAction(e -> {
+                Leave selected = leaveTable.getSelectionModel().getSelectedItem();
+                if (selected != null) {
+                    try {
+                        boolean ok = service.approveLeave(String.valueOf(selected.getLeaveId()), "Approved");
+                        if (ok) {
+                            new Alert(Alert.AlertType.INFORMATION, "Leave Approved!").show();
+                            btnRefreshLeaves.fire();
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            });
+
+            btnReject.setOnAction(e -> {
+                Leave selected = leaveTable.getSelectionModel().getSelectedItem();
+                if (selected != null) {
+                    try {
+                        boolean ok = service.approveLeave(String.valueOf(selected.getLeaveId()), "Rejected");
+                        if (ok) {
+                            new Alert(Alert.AlertType.INFORMATION, "Leave Rejected!").show();
+                            btnRefreshLeaves.fire();
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            });
+
+            HBox leaveActions = new HBox(10, btnApprove, btnReject, btnRefreshLeaves);
+
+            btnRefreshLeaves.fire();
+
+            leaveBox.getChildren().addAll(new Label("Pending Leave Requests"), leaveTable, leaveActions);
+            Tab leaveTab = new Tab("Leave Requests", leaveBox);
+            leaveTab.setClosable(false);
+            tabPane.getTabs().add(leaveTab);
         }
 
         Scene scene = new Scene(tabPane, 800, 500);

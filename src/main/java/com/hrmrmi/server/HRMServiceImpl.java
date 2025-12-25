@@ -97,6 +97,12 @@ public class HRMServiceImpl extends UnicastRemoteObject implements HRMService {
     }
 
     @Override
+    public List<Leave> getAllPendingLeaves() throws RemoteException {
+        System.out.println("Fetching all employees pending leaves...");
+        return leaveRepo.findPendingLeaves();
+    }
+
+    @Override
     public Report generateReport(String employeeID, int year) throws RemoteException {
         return new Report();
     }

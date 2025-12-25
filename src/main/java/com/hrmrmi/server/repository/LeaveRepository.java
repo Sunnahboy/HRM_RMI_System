@@ -51,16 +51,25 @@ public class LeaveRepository {
         return list;
     }
 
-    public List<Leave> getPendingLeaves() {
+    public List<Leave> findPendingLeaves() {
         List<Leave> list = new ArrayList<>();
         String sql = "SELECT * FROM leaves WHERE status = 'PENDING' ORDER BY startDate ASC";
 
         try (Connection conn = DBConnection.getConnection();
-            Statement st = conn.createStatement();
-            ResultSet rs = st.executeQuery(sql)) {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                list.add(mapLeave(rs));
+                Leave leave = new Leave();
+                leave.setLeaveId(rs.getInt("leaveId"));
+                leave.setEmployeeId(rs.getInt("employeeId"));
+
+                leave.setStartDate(rs.getDate("startDate"));
+                leave.setEndDate(rs.getDate("endDate"));
+                leave.setReason(rs.getString("reason"));
+                leave.setStatus(rs.getString("status"));
+
+                list.add(leave);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -113,8 +122,8 @@ public class LeaveRepository {
                 rs.getInt("employeeId"),
                 rs.getDate("startDate"),
                 rs.getDate("endDate"),
-                rs.getString("status"),
-                rs.getString("reason")
+                rs.getString("reason"),
+                rs.getString("status")
         );
     }
 
