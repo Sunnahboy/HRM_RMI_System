@@ -12,6 +12,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.GridPane;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
@@ -134,7 +135,7 @@ public class HRGUI extends Application {
 
             table.getColumns().addAll(colId, colName, colLast, colDept, colRole, colEmail, colSalary);
 
-            // C. FIRE BUTTON
+            // C. FIRE n edit BUTTON
             Button btnFire = new Button("Fire Selected Employee");
             btnFire.setStyle("-fx-background-color: #ff4444; -fx-text-fill: white;");
 
@@ -161,6 +162,68 @@ public class HRGUI extends Application {
                 });
             });
 
+            HBox actionButtons = new HBox(10);
+
+            //edit button
+            Button btnEdit = new Button("Edit Details / Promote");
+            btnEdit.setOnAction(e -> {
+                Employee selected = table.getSelectionModel().getSelectedItem();
+                if (selected == null) {
+                    new Alert(Alert.AlertType.WARNING, "Select an employee first.").show();
+                    return;
+                }
+
+                //custom dialog
+                Dialog<ButtonType> dialog = new Dialog<>();
+                dialog.setTitle("Update Employee Status");
+                dialog.setHeaderText("Editing: " + selected.getFirstName());
+
+                ButtonType saveButtonType = new ButtonType("Save Changes", ButtonBar.ButtonData.OK_DONE);
+                dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
+
+                //layout
+                GridPane grid = new GridPane();
+                grid.setHgap(10); grid.setVgap(10);
+                grid.setPadding(new Insets(20, 150, 10, 10));
+
+                TextField deptInput = new TextField(selected.getDepartment());
+                TextField posInput = new TextField(selected.getPosition());
+                TextField salaryInput = new TextField(String.valueOf(selected.getSalary()));
+
+                grid.add(new Label("Department: "), 0, 0); grid.add(deptInput, 1, 0);
+                grid.add(new Label("Position: "), 0, 1); grid.add(posInput, 1, 1);
+                grid.add(new Label("Salary: "), 0, 2); grid.add(salaryInput, 1, 2);
+
+                dialog.getDialogPane().setContent(grid);
+
+                dialog.showAndWait().ifPresent(response -> {
+                    if (response == saveButtonType) {
+                        try {
+                            double newSalary = Double.parseDouble(salaryInput.getText());
+
+                            boolean done = service.updateEmployeeStatus(
+                                    String.valueOf(selected.getId()),
+                            deptInput.getText(),
+                            posInput.getText(),
+                            newSalary
+                            );
+
+                            if (done) {
+                                new Alert(Alert.AlertType.INFORMATION, "Updated!").show();
+                                btnReset.fire();
+                            }
+                            else {
+                                new Alert(Alert.AlertType.ERROR, "Update failed!").show();
+                            }
+                        } catch (NumberFormatException ex) {
+                            new Alert(Alert.AlertType.ERROR, "Invalid Salary!").show();
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                });
+            });
+
             // D. Button Logic (Search & Reset)
             btnSearch.setOnAction(e -> {
                 try {
@@ -180,8 +243,10 @@ public class HRGUI extends Application {
             // Initial Load
             btnReset.fire();
 
+            actionButtons.getChildren().addAll(btnEdit, btnFire);
+
             // Add everything to List Box
-            listBox.getChildren().addAll(new Label("Employee Directory"), searchBox, table, btnFire);
+            listBox.getChildren().addAll(new Label("Employee Directory"), searchBox, table, actionButtons);
 
             // Add Tab
             Tab listTab = new Tab("Directory", listBox);

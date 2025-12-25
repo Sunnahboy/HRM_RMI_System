@@ -33,5 +33,5 @@ public interface HRMService extends Remote{
 
     boolean fireEmployee(String employeeID, String reason) throws RemoteException;
 
-//    boolean updateEmployeeStatus(String employeeID, String newDept, String newPosition, double newSalary) throws RemoteException;
+    boolean updateEmployeeStatus(String employeeID, String newDept, String newPosition, double newSalary) throws RemoteException;
 }

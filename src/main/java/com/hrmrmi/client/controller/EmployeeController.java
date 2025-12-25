@@ -49,7 +49,7 @@ public class EmployeeController {
         if (loggedInEmployee == null) return null;
 
         try {
-            return service.viewProfile(loggedInEmployee.getId());
+            return service.viewProfile(String.valueOf(loggedInEmployee.getId()));
         } catch (RemoteException e) {
             System.err.println("RMI error while fetching profile");
             return null;
@@ -64,7 +64,7 @@ public class EmployeeController {
 
         try {
             return service.applyLeave(
-                    loggedInEmployee.getId(),
+                    String.valueOf(loggedInEmployee.getId()),
                     leave
             );
         } catch (RemoteException e) {
