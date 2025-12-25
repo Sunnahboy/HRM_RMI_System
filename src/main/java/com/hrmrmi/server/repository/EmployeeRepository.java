@@ -96,7 +96,7 @@ public class EmployeeRepository {
     public List<Employee> searchEmployee(String keyword) {
         List <Employee> list = new ArrayList<>();
 
-        String sql = "SELECT * FROM employees WHERE firstname ILIKE ? OR lastname ILIKE ? OR department ILIKE ?";
+        String sql = "SELECT * FROM employees WHERE firstname ILIKE ? OR lastname ILIKE ? OR department ILIKE ? OR email ILIKE ?";
 
         try (Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -197,24 +197,24 @@ public class EmployeeRepository {
     }
 
     // HR update emp
-//    public boolean updateStatus(int id, String dept, String pos, double salary) {
-//        String sql = "UPDATE employees SET department = ?, position = ?, salary = ? WHERE id = ?";
-//
-//        try (Connection conn = DBConnection.getConnection();
-//             PreparedStatement ps = conn.prepareStatement(sql)) {
-//
-//            ps.setString(1, dept);
-//            ps.setString(2, pos);
-//            ps.setDouble(3, salary);
-//            ps.setInt(4, id); // The Target
-//
-//            return ps.executeUpdate() > 0;
-//
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//            return false;
-//        }
-//    }
+    public boolean updateStatus(int id, String dept, String pos, double salary) {
+        String sql = "UPDATE employees SET department = ?, position = ?, salary = ? WHERE id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, dept);
+            ps.setString(2, pos);
+            ps.setDouble(3, salary);
+            ps.setInt(4, id); // Target
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
     private Employee mapEmployee(ResultSet rs) throws SQLException {
         return new Employee(

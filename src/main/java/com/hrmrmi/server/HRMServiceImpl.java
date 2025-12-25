@@ -126,4 +126,16 @@ public class HRMServiceImpl extends UnicastRemoteObject implements HRMService {
             return false;
         }
     }
+
+    @Override
+    public boolean updateEmployeeStatus(String employeeID, String newDept, String newPosition, double newSalary) throws RemoteException {
+        System.out.println("HR Updating status for ID: " + employeeID);
+        try {
+            int id = Integer.parseInt(employeeID);
+            return empRepo.updateStatus(id, newDept, newPosition, newSalary);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid ID format");
+            return false;
+        }
+    }
 }

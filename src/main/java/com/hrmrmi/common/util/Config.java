@@ -10,7 +10,7 @@ public class Config {
     public static final String  RMI_NAME = "HRMService";
 
     //USE PORT FORWARDING! MORE MARKS
-    public static final String RMI_HOST = System.getenv("HRM_SERVER_IP") != null ? System.getenv("HRM_SERVER_IP") : "localhost";
+    public static final String RMI_HOST = System.getenv("HRMService") != null ? System.getenv("HRM_SERVER_IP") : "localhost";
     public static final String DB_DRIVER = "org.postgresql.Driver";
 
     //Not required right now,but will prevent duplication later.
