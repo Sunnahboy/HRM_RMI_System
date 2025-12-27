@@ -25,6 +25,8 @@ public interface HRMService extends Remote{
 
     boolean approveLeave(String leaveID, String decision) throws RemoteException;
 
+    List<Leave> getAllPendingLeaves() throws RemoteException;
+
     Report generateReport(String employeeID, int year) throws RemoteException;
 
     List<Employee> searchProfile(String keyword) throws RemoteException;
@@ -34,4 +36,5 @@ public interface HRMService extends Remote{
     boolean fireEmployee(String employeeID, String reason) throws RemoteException;
 
     boolean updateEmployeeStatus(String employeeID, String newDept, String newPosition, double newSalary) throws RemoteException;
+
 }

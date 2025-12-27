@@ -1,9 +1,10 @@
 package com.hrmrmi.client.gui;
 
 import com.hrmrmi.common.HRMService;
-import com.hrmrmi.common.model.Employee;
+import com.hrmrmi.common.model.*;
 import com.hrmrmi.common.util.Config;
 import javafx.application.Application;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -252,7 +253,172 @@ public class HRGUI extends Application {
             Tab listTab = new Tab("Directory", listBox);
             listTab.setClosable(false);
             tabPane.getTabs().add(listTab);
+
+            //Tab 4: leave reqs
+            VBox leaveBox = new VBox(10);
+            leaveBox.setPadding(new Insets(10));
+
+            //table
+            TableView<Leave>  leaveTable = new TableView<>();
+
+            TableColumn<Leave, Integer> colLId = new TableColumn<>("Leave ID");
+            colLId.setCellValueFactory(new PropertyValueFactory<>("leaveId"));
+
+            TableColumn<Leave, Integer> colEmpId = new TableColumn<>("Emp ID");
+            colEmpId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
+
+            TableColumn<Leave, String> colStart = new TableColumn<>("Start Date");
+            colStart.setCellValueFactory(cellData ->
+                    new SimpleStringProperty(cellData.getValue().getStartDate().toString()));
+
+            TableColumn<Leave, String> colEnd = new TableColumn<>("End Date");
+            colEnd.setCellValueFactory(cellData ->
+                    new SimpleStringProperty(cellData.getValue().getEndDate().toString()));
+
+            TableColumn<Leave, String> colReason = new TableColumn<>("Reason");
+            colReason.setCellValueFactory(new PropertyValueFactory<>("reason"));
+
+            TableColumn<Leave, String> colStatus = new TableColumn<>("Status");
+            colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
+
+            leaveTable.getColumns().addAll(colLId, colEmpId, colStart, colEnd, colReason, colStatus);
+
+            //refresh
+            Button btnRefreshLeaves = new Button("Refresh Requests");
+            btnRefreshLeaves.setOnAction(e -> {
+                try {
+                    List<Leave> pending = service.getAllPendingLeaves();
+                    leaveTable.setItems(FXCollections.observableArrayList(pending));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            });
+
+            //action btns
+            Button btnApprove = new Button("Approve");
+            btnApprove.setStyle("-fx-background-colour: #4CAF50; -fx-text-fill: white;");
+
+            Button btnReject = new Button("Reject");
+            btnReject.setStyle("-fx-background-colour: #f44336; -fx-text-fill: white;");
+
+            btnApprove.setOnAction(e -> {
+                Leave selected = leaveTable.getSelectionModel().getSelectedItem();
+                if (selected != null) {
+                    try {
+                        boolean ok = service.approveLeave(String.valueOf(selected.getLeaveId()), "Approved");
+                        if (ok) {
+                            new Alert(Alert.AlertType.INFORMATION, "Leave Approved!").show();
+                            btnRefreshLeaves.fire();
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            });
+
+            btnReject.setOnAction(e -> {
+                Leave selected = leaveTable.getSelectionModel().getSelectedItem();
+                if (selected != null) {
+                    try {
+                        boolean ok = service.approveLeave(String.valueOf(selected.getLeaveId()), "Rejected");
+                        if (ok) {
+                            new Alert(Alert.AlertType.INFORMATION, "Leave Rejected!").show();
+                            btnRefreshLeaves.fire();
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            });
+
+            HBox leaveActions = new HBox(10, btnApprove, btnReject, btnRefreshLeaves);
+
+            btnRefreshLeaves.fire();
+
+            leaveBox.getChildren().addAll(new Label("Pending Leave Requests"), leaveTable, leaveActions);
+            Tab leaveTab = new Tab("Leave Requests", leaveBox);
+            leaveTab.setClosable(false);
+            tabPane.getTabs().add(leaveTab);
         }
+
+        VBox reportBox = new VBox(15);
+        reportBox.setPadding(new Insets(20));
+
+        Label lblReportHeader = new Label("Generate Annual Leave Report");
+        lblReportHeader.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+
+        HBox inputRow = new HBox(10);
+        TextField txtReportId = new TextField();
+        txtReportId.setPromptText("EmployeeID");
+
+        TextField txtReportYear = new TextField();
+        txtReportYear.setPromptText("Year");
+        txtReportYear.setText("2024");
+
+        Button btnGenerate = new Button("Generate Report");
+
+        inputRow.getChildren().addAll(new Label("ID: "), txtReportId, new Label("Year: "), txtReportYear, btnGenerate);
+
+        TextArea reportOutput = new TextArea();
+        reportOutput.setEditable(false);
+        reportOutput.setPromptText("Report details will appear here shortly...");
+        reportOutput.setPrefHeight(300);
+        reportOutput.setStyle("-fx-font-family: 'Monospaced';");
+
+        btnGenerate.setOnAction(e -> {
+            String idStr = txtReportId.getText();
+            String yearStr = txtReportYear.getText();
+
+            if (idStr.isEmpty() || yearStr.isEmpty()) {
+                new Alert(Alert.AlertType.WARNING, "Please enter valid ID and Year");
+                return;
+            }
+
+            try {
+                int year = Integer.parseInt(yearStr);
+
+                Report report = service.generateReport(idStr, year);
+
+                if(report != null) {
+                    String displayText = String.format(
+                            "========================================\n" +
+                            "          ANNUAL LEAVE REPORT           \n" +
+                            "========================================\n\n" +
+                            "  Employee Name  : %s\n" +
+                            "  Employee ID    : %d\n" +
+                            "  Year           : %d\n\n" +
+                            "----------------------------------------\n" +
+                            "  Total Approved Leaves :   %2d days\n" +
+                            "  Remaining Balance     :   %2d days\n" +
+                            "----------------------------------------\n\n" +
+                            "  Generated on   : %s\n" +
+                            "  Generated by   : %s\n\n" +
+                            "========================================",
+                            report.getEmployeeName(),
+                            report.getEmployeeId(),
+                            year,
+                            report.getTotalLeavesTaken(),
+                            report.getRemainingLeaveBalance(),
+                            report.getGeneratedDate().toString(),
+                            report.getGeneratedBy()
+                    );
+                    reportOutput.setText(displayText);
+                }
+                else {
+                    reportOutput.setText("No data found. \n Confirm if Employee ID exists in company database");
+                }
+            } catch (NumberFormatException ex) {
+                new Alert(Alert.AlertType.ERROR, "ID and Year must be numbers!").show();
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                reportOutput.setText("Error: " + ex.getMessage());
+            }
+        });
+
+        reportBox.getChildren().addAll(lblReportHeader, inputRow, reportOutput);
+        Tab reportTab = new Tab("Reports", reportBox);
+        reportTab.setClosable(false);
+        tabPane.getTabs().add(reportTab);
 
         Scene scene = new Scene(tabPane, 800, 500);
         primaryStage.setTitle("HRM Dashboard - " + currentUser.getFirstName());
