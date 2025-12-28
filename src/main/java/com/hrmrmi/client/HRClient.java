@@ -7,7 +7,7 @@ import javafx.application.Application;
 public class HRClient {
     public static void main(String[] args) {
         // SSL will be enabled later when server enforces it
-        // SSLClientConfig.configure();
+         SSLClientConfig.configure();
         // This command tells Java: "Start the graphical interface defined in HRGUI"
         Application.launch(LoginGUI.class, args);
     }
