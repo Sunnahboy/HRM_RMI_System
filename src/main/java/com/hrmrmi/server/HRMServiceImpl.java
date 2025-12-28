@@ -19,7 +19,7 @@ public class HRMServiceImpl extends UnicastRemoteObject implements HRMService {
     private final ReportRepository reportRepo;
 
     public HRMServiceImpl() throws RemoteException {
-        super();
+        super(0, new SSLConfig().createClientFactory(), new SSLConfig().createServerFactory());
 
         this.empRepo = new EmployeeRepository();
         this.leaveRepo = new LeaveRepository();
