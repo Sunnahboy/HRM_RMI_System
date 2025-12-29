@@ -75,4 +75,10 @@ test {
 
 application {
     mainClass = 'com.hrmrmi.client.HRClient'
+
 }
+
+application {
+    mainClass = 'com.hrmrmi.client.EmployeeClient'
+}
+

@@ -1,3 +1,12 @@
+
+/*
+ * Employee is a data transfer object (DTO) that encapsulates employee-related
+ * attributes required by the Human Resource Management system. It implements
+ * Serializable to support object transmission across JVM boundaries via Java RMI.
+ */
+
+
+
 package com.hrmrmi.common.model;
 import java.io.Serial;
 import java.io.Serializable;

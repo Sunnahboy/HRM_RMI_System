@@ -1,10 +1,19 @@
-package com.hrmrmi.server;
 
+/*
+ * HRMServiceImpl provides the concrete server-side implementation of the HRMService
+ * remote interface. It acts as the business logic layer in the RMI architecture,
+ * coordinating requests from remote clients and interacting with repository
+ * components to manage employees, leave records, reports, and related HR data.
+ */
+
+package com.hrmrmi.server;
 import com.hrmrmi.common.HRMService;
 import com.hrmrmi.common.model.Employee;
+import com.hrmrmi.common.model.FamilyDetails;
 import com.hrmrmi.common.model.Leave;
 import com.hrmrmi.common.model.Report;
 import com.hrmrmi.server.repository.EmployeeRepository;
+import com.hrmrmi.server.repository.FamilyDetailRepository;
 import com.hrmrmi.server.repository.LeaveRepository;
 import com.hrmrmi.server.repository.ReportRepository;
 
@@ -17,27 +26,59 @@ public class HRMServiceImpl extends UnicastRemoteObject implements HRMService {
     private final EmployeeRepository empRepo;
     private final LeaveRepository leaveRepo;
     private final ReportRepository reportRepo;
+    private final FamilyDetailRepository familyRepo;
+
+
+
 
     public HRMServiceImpl() throws RemoteException {
-        super(0, new SSLConfig().createClientFactory(), new SSLConfig().createServerFactory());
+        super(); //  keep SSL disabled until fully tested
 
         this.empRepo = new EmployeeRepository();
         this.leaveRepo = new LeaveRepository();
         this.reportRepo = new ReportRepository();
+        this.familyRepo = new FamilyDetailRepository();
+
     }
 
-    //shared funcs
-    //changed string to boolean and added a return match
+    /* ===================== SHARED ===================== */
+
+    @Override
+    public List<FamilyDetails> getFamilyDetails(String employeeID) throws RemoteException {
+        int id = Integer.parseInt(employeeID);
+        return familyRepo.getFamilyDetails(id);
+    }
+
+    @Override
+    public boolean saveFamilyDetail(FamilyDetails details) throws RemoteException {
+        return familyRepo.addFamilyDetail(details);
+    }
+
+    /**
+     * Clean up duplicate family detail records
+     */
+    public boolean cleanupFamilyDetailDuplicates() throws RemoteException {
+        System.out.println("🧹 [SERVICE] Cleaning up family detail duplicates...");
+        return familyRepo.cleanupDuplicates();
+    }
+
+
     @Override
     public Employee login(String email, String password) throws RemoteException {
-        System.out.println("Login attempt for Email: " + email);
-
+        System.out.println("Login attempt for: " + email);
         return empRepo.login(email, password);
     }
 
     @Override
-    public boolean applyLeave(String employeeID, Leave leaveApplication) throws RemoteException {
-        return leaveRepo.applyLeave(leaveApplication);
+    public boolean applyLeave(String employeeID, Leave leave) throws RemoteException {
+        try {
+            int empId = Integer.parseInt(employeeID);
+            leave.setEmployeeId(empId); // 🔴 CRITICAL FIX
+            return leaveRepo.applyLeave(leave);
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid employee ID");
+            return false;
+        }
     }
 
     @Override
@@ -47,108 +88,129 @@ public class HRMServiceImpl extends UnicastRemoteObject implements HRMService {
 
     @Override
     public Employee viewProfile(String employeeID) throws RemoteException {
-        return empRepo.getEmployee(employeeID);
+        try {
+            int id = Integer.parseInt(employeeID);
+            return empRepo.getEmployeeById(id); // 🔴 FIXED
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     @Override
     public boolean changePassword(String username, String newPassword) throws RemoteException {
-        System.out.println("Password change requested for: " + username);
-        return true;
+        System.out.println("Password change request for user: " + username);
+        return empRepo.changePassword(username, newPassword);
     }
 
-    //HR funcs
     @Override
-    public boolean registerEmployees(String firstName, String lastName, String IC_Passport, String department, String position) throws RemoteException {
-            // employee obj
-            Employee emp = new Employee();
+    public String getUserPassword(String username) throws RemoteException {
+        System.out.println("Getting password hash for user: " + username);
+        return empRepo.getUserPassword(username);
+    }
 
-            emp.setFirstName(firstName);
-            emp.setLastName(lastName);
-            emp.setPassportNumber(IC_Passport);
-            emp.setDepartment(department);
-            emp.setPosition(position);
+    /* ===================== HR ONLY ===================== */
 
-            if ("HR".equalsIgnoreCase(department)) {
-                emp.setRole("HR");
-            }
-            else {
-                emp.setRole("EMPLOYEE");
-            }
+    @Override
+    public boolean registerEmployees(
+            String firstName,
+            String lastName,
+            String icPassport,
+            String department,
+            String position
+    ) throws RemoteException {
 
-            // default values for testing
-            emp.setEmail(firstName.toLowerCase() + "." + lastName.toLowerCase() + "@company.com");
-            emp.setLeaveBalance(20); // Default 20 days leave
-            emp.setSalary(2500);
-            emp.setPassword("123456");
+        Employee emp = new Employee();
+        emp.setFirstName(firstName);
+        emp.setLastName(lastName);
+        emp.setPassportNumber(icPassport);
+        emp.setDepartment(department);
+        emp.setPosition(position);
 
-            // Send to repository to save via SQL
-            return empRepo.registerEmployee(emp);
+        emp.setRole("employee"); //  CONSISTENT ROLE
+        emp.setEmail(firstName.toLowerCase() + "." + lastName.toLowerCase() + "@company.com");
+        emp.setLeaveBalance(20);
+        emp.setSalary(2500);
+        emp.setPassword("123456");
+
+        return empRepo.registerEmployee(emp);
     }
 
     @Override
     public boolean approveLeave(String leaveID, String decision) throws RemoteException {
         int id = Integer.parseInt(leaveID);
-
-        if ("Approved".equalsIgnoreCase(decision)) {
-            return leaveRepo.approveLeave(id);
-        } else {
-            return leaveRepo.rejectLeave(id);
-        }
+        return "Approved".equalsIgnoreCase(decision)
+                ? leaveRepo.approveLeave(id)
+                : leaveRepo.rejectLeave(id);
     }
 
-    @Override
+        @Override
     public List<Leave> getAllPendingLeaves() throws RemoteException {
         System.out.println("Fetching all employees pending leaves...");
         return leaveRepo.findPendingLeaves();
     }
 
+
+    @Override
+    public List<Leave> getMyLeaves(String employeeID) throws RemoteException {
+        try {
+            int id = Integer.parseInt(employeeID);
+            return leaveRepo.getLeavesByEmployee(id);
+        } catch (NumberFormatException e) {
+            return List.of();
+        }
+    }
+
+
     @Override
     public Report generateReport(String employeeID, int year) throws RemoteException {
-        System.out.println("Generating Report for employee ID: " + employeeID + ", Year: " + year);
         try {
             int id = Integer.parseInt(employeeID);
             return reportRepo.generateEmployeeReport(id, year);
-        } catch(NumberFormatException e) {
-            System.out.println("Invalid ID format");
+        } catch (NumberFormatException e) {
             return null;
         }
     }
 
     @Override
     public List<Employee> searchProfile(String keyword) throws RemoteException {
-        System.out.println("Searching for: " + keyword);
         return empRepo.searchEmployee(keyword);
     }
 
     @Override
     public List<Employee> getAllEmployees() throws RemoteException {
-        System.out.println("Collecting all employees record...");
-        return empRepo.getAllEmployees();
+        return List.of();
     }
 
     @Override
     public boolean fireEmployee(String employeeID, String reason) throws RemoteException {
-        System.out.println("Firing Employee ID: " + employeeID);
-        System.out.println("Reason: " + reason);
-
         try {
-            int id = Integer.parseInt(employeeID);
-            return empRepo.deleteEmployee(id);
+            return empRepo.deleteEmployee(Integer.parseInt(employeeID));
         } catch (NumberFormatException e) {
-            System.out.println("Invalid ID format");
             return false;
         }
     }
 
     @Override
     public boolean updateEmployeeStatus(String employeeID, String newDept, String newPosition, double newSalary) throws RemoteException {
-        System.out.println("HR Updating status for ID: " + employeeID);
+        return false;
+    }
+
+
+    @Override
+    public boolean extendLeave(String employeeID, int leaveId, java.sql.Date newEndDate) throws RemoteException {
         try {
-            int id = Integer.parseInt(employeeID);
-            return empRepo.updateStatus(id, newDept, newPosition, newSalary);
+            int empId = Integer.parseInt(employeeID);
+            System.out.println("[SERVER] extendLeave() request");
+            System.out.println("   Employee: " + empId + " | Leave: " + leaveId + " | New end: " + newEndDate);
+
+            boolean result = leaveRepo.extendLeave(leaveId, empId, newEndDate);
+            System.out.println("   ✓ Result: " + result + "\n");
+            return result;
         } catch (NumberFormatException e) {
-            System.out.println("Invalid ID format");
+            System.out.println(" Invalid employee ID");
             return false;
         }
     }
+
+
 }

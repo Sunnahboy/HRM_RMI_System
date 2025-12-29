@@ -1,16 +1,19 @@
 package com.hrmrmi.server.repository;
 
+import com.hrmrmi.common.model.Employee;
+import com.hrmrmi.common.model.FamilyDetails;
+import com.hrmrmi.common.model.Leave;
 import com.hrmrmi.common.util.DBConnection;
 import com.hrmrmi.common.model.Report;
 
-import java.awt.image.DataBufferDouble;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Date;
-
+@SuppressWarnings({"SqlDialectInspection","CallToPrintStackTrace"})
 public class ReportRepository {
     public Map<String, Integer> getMonthlyLeaveReport(int year) {
         Map<String, Integer> report = new HashMap<>();
@@ -77,47 +80,85 @@ public class ReportRepository {
         }
         return report;
     }
-
     public Report generateEmployeeReport(int empId, int year) {
-        String sqlEmployee = "SELECT firstName, lastName, leaveBalance FROM employees WHERE id = ?";
-
-        String sqlLeaves = "SELECT SUM(endDate - startDate + 1) AS totalDays " +
-                "FROM leaves " +
-                "WHERE employeeId = ? AND status = 'Approved' " +
-                "AND EXTRACT(YEAR FROM startDate) = ?";
-
+        Employee emp = null;
+        List<FamilyDetails> familyDetailsList = new ArrayList<>();
+        List<Leave> leaveList = new ArrayList<>();
         String empName = "Unknown";
-        int leaveBalance = 0;
         int leavesTaken = 0;
+        int leaveBalance = 0;
+
+        String sqlEmployee = "SELECT * FROM employees WHERE id = ?";
+        String sqlFam = "SELECT * FROM family_details WHERE employeeId = ?";
+
+        String sqlLeave = "SELECT * FROM leaves WHERE employeeId = ? AND EXTRACT(YEAR FROM startDate) = ?";
 
         try (Connection conn = DBConnection.getConnection()) {
 
             try (PreparedStatement ps = conn.prepareStatement(sqlEmployee)) {
                 ps.setInt(1, empId);
                 ResultSet rs = ps.executeQuery();
-
-                if(rs.next()) {
-                    empName = rs.getString("firstName") + " " + rs.getString("lastName");
-                    leaveBalance = rs.getInt("leaveBalance");
-                }
-                else {
-                    return null;
+                if (rs.next()) {
+                    emp = new Employee(
+                            rs.getInt("id"),
+                            rs.getString("firstName"),
+                            rs.getString("lastName"),
+                            rs.getString("email"),
+                            rs.getString("department"),
+                            rs.getString("ic_passport_num"),
+                            rs.getString("position"),
+                            rs.getInt("leaveBalance"),
+                            rs.getDouble("salary"),
+                            null, // password hidden
+                            rs.getString("role")
+                    );
+                } else {
+                    return null; // Employee not found
                 }
             }
 
-            try (PreparedStatement ps = conn.prepareStatement(sqlLeaves)) {
+            // 2. Fetch Family Details
+            try (PreparedStatement ps = conn.prepareStatement(sqlFam)) {
+                ps.setInt(1, empId);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    familyDetailsList.add(new FamilyDetails(
+                            rs.getInt("familyId"),
+                            rs.getInt("employeeId"),
+                            rs.getString("name"),
+                            rs.getString("relationship"),
+                            rs.getString("contact")
+                    ));
+                }
+            }
+
+            // 3. Fetch Leave History & Calculate Total
+            try (PreparedStatement ps = conn.prepareStatement(sqlLeave)) {
                 ps.setInt(1, empId);
                 ps.setInt(2, year);
                 ResultSet rs = ps.executeQuery();
-                if(rs.next()) {
-                    leavesTaken = rs.getInt("totalDays");
+                while (rs.next()) {
+                    Leave l = new Leave(
+                            rs.getInt("leaveId"),
+                            rs.getInt("employeeId"),
+                            rs.getDate("startDate"),
+                            rs.getDate("endDate"),
+                            rs.getString("status"),
+                            rs.getString("reason")
+                    );
+                    leaveList.add(l);
+
+                    // Calculate days if Approved
+                    if ("Approved".equalsIgnoreCase(l.getStatus())) {
+                        long diff = l.getEndDate().getTime() - l.getStartDate().getTime();
+                        int days = (int) (diff / (1000 * 60 * 60 * 24)) + 1;
+                        leavesTaken += days;
+                    }
                 }
             }
 
-            return new Report(
-                    0, empId, empName, leavesTaken, leaveBalance,
-                    new Date(), "HR Admin"
-            );
+            return new Report(emp, familyDetailsList, leaveList, leavesTaken, new Date(), "HR Admin");
+
         } catch(SQLException e) {
             e.printStackTrace();
             return null;

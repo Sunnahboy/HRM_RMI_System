@@ -38,3 +38,28 @@ CREATE TABLE family_details (
 -- 4. INSERT ADMIN USER (So you can log in immediately)
 INSERT INTO employees (firstName, lastName, email, department, ic_passport_num, position, password, role, salary)
 VALUES ('System', 'Admin', 'admin@admin.com', 'HR', 'A001', 'Manager', 'admin123', 'admin', 5000);
+
+INSERT INTO employees (
+    firstName,
+    lastName,
+    email,
+    department,
+    ic_passport_num,
+    position,
+    leaveBalance,
+    salary,
+    password,
+    role
+)
+VALUES (
+           'John',
+           'Doe',
+           'abdi@gmail.com',
+           'Engineering',
+           '123',
+           'Software Engineer',
+           20,
+           4000,
+           'password123',
+           'employee'
+       );

@@ -1,75 +1,208 @@
+
 package com.hrmrmi.client.gui;
 
-import com.hrmrmi.common.HRMService;
-import com.hrmrmi.common.model.Employee; // Import the model
-import com.hrmrmi.common.util.Config;
+import com.hrmrmi.client.controller.HRController;
+import com.hrmrmi.common.model.Employee;
 import javafx.application.Application;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
-import java.rmi.Naming;
 
 public class LoginGUI extends Application {
 
+    // Design Constants
+    private static final String PRIMARY_COLOR = "#2E7D32";
+    private static final String SECONDARY_COLOR = "#1976D2";
+    private static final String SUCCESS_COLOR = "#43A047";
+    private static final String ERROR_COLOR = "#E53935";
+    private static final String BACKGROUND_COLOR = "#F5F5F5";
+    private static final String CARD_BG = "#FFFFFF";
+
     @Override
     public void start(Stage primaryStage) {
-        VBox root = new VBox(15);
-        root.setAlignment(Pos.CENTER);
-        root.setStyle("-fx-padding: 40px;");
+        // Main Container
+        VBox mainBox = new VBox(20);
+        mainBox.setAlignment(Pos.CENTER);
+        mainBox.setPadding(new Insets(60));
+        mainBox.setStyle("-fx-background-color: " + BACKGROUND_COLOR + ";");
 
-        Label title = new Label("HR Management System");
-        title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        // Logo/Title Container
+        VBox titleBox = new VBox(8);
+        titleBox.setAlignment(Pos.CENTER);
+        titleBox.setPadding(new Insets(0, 0, 30, 0));
 
-        // DYNAMIC INPUT: User types their email here
+        Label title = new Label("🏢 HR Management System");
+        title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 32));
+        title.setTextFill(javafx.scene.paint.Color.web(PRIMARY_COLOR));
+
+        Label subtitle = new Label("Human Resource Management Portal");
+        subtitle.setFont(Font.font("Segoe UI", 13));
+        subtitle.setTextFill(javafx.scene.paint.Color.web("#888888"));
+
+        titleBox.getChildren().addAll(title, subtitle);
+
+        // Form Container (Card)
+        VBox formBox = new VBox(16);
+        formBox.setPadding(new Insets(50));
+        formBox.setStyle("-fx-background-color: " + CARD_BG + "; "
+                + "-fx-border-color: #E0E0E0; -fx-border-radius: 12; "
+                + "-fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0, 0, 4);");
+        formBox.setMaxWidth(380);
+
+        // Email Label
+        Label emailLabel = createLabel("Email Address");
+
+        // Email Field
         TextField emailField = new TextField();
-        emailField.setPromptText("Email (e.g. admin@bhel.com)");
+        emailField.setPromptText("Enter your email");
+        emailField.setStyle(getTextFieldStyle());
+        emailField.setPrefHeight(45);
 
-        // DYNAMIC INPUT: User types their password here
+        // Password Label
+        Label passLabel = createLabel("Password");
+
+        // Password Field
         PasswordField passField = new PasswordField();
-        passField.setPromptText("Password");
+        passField.setPromptText("Enter your password");
+        passField.setStyle(getTextFieldStyle());
+        passField.setPrefHeight(45);
 
-        Button btnLogin = new Button("Login");
+        // Login Button
+        Button btnLogin = new Button("🔐 Sign In");
+        btnLogin.setStyle(getPrimaryButtonStyle());
+        btnLogin.setPrefWidth(250);
+        btnLogin.setPrefHeight(45);
+        btnLogin.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
 
-        // LOGIN LOGIC
+        // Error Message Label
+        Label msgLabel = new Label();
+        msgLabel.setStyle("-fx-text-fill: " + ERROR_COLOR + "; -fx-font-size: 12;");
+        msgLabel.setWrapText(true);
+
+        // Login Logic
         btnLogin.setOnAction(e -> {
-            String email = emailField.getText();
+            String email = emailField.getText().trim();
             String pass = passField.getText();
 
+            // Validation
+            if (email.isEmpty()) {
+                msgLabel.setText("✗ Email is required");
+                msgLabel.setStyle("-fx-text-fill: " + ERROR_COLOR + "; -fx-font-size: 12;");
+                return;
+            }
+
+            if (pass.isEmpty()) {
+                msgLabel.setText("✗ Password is required");
+                msgLabel.setStyle("-fx-text-fill: " + ERROR_COLOR + "; -fx-font-size: 12;");
+                return;
+            }
+
+            btnLogin.setDisable(true);
+            btnLogin.setText("Signing in...");
+
             try {
-                String url = "rmi://" + Config.RMI_HOST + ":" + Config.RMI_PORT + "/" + Config.RMI_NAME;
-                HRMService service = (HRMService) Naming.lookup(url);
+                HRController controller = new HRController();
+                boolean ok = controller.login(email, pass);
 
-                // CALL SERVER: Pass the DYNAMIC email/password
-                Employee user = service.login(email, pass);
+                if (ok) {
+                    Employee user = controller.getLoggedInHR();
 
-                if (user != null) {
-                    // SUCCESS!
-                    // user object contains: {id=1, name="Admin", role="admin"...}
+                    if (user != null) {
+                        System.out.println("✓ Login successful for: " + user.getFirstName() + " " + user.getLastName());
+                        System.out.println("  Role: " + user.getRole());
+                        System.out.println("  Department: " + user.getDepartment());
 
-                    primaryStage.close(); // Close Login
+                        msgLabel.setText("✓ Login successful! Redirecting...");
+                        msgLabel.setStyle("-fx-text-fill: " + SUCCESS_COLOR + "; -fx-font-size: 12;");
 
-                    // PASS THE USER TO THE DASHBOARD
-                    // We need to update HRGUI to accept this 'user' object!
-                    HRGUI dashboard = new HRGUI(user);
-                    try {
+                        primaryStage.close();
+
+                        HRGUI dashboard = new HRGUI(user);
                         dashboard.start(new Stage());
-                    } catch (Exception ex) { ex.printStackTrace(); }
-
+                    } else {
+                        msgLabel.setText("✗ User profile not found");
+                        msgLabel.setStyle("-fx-text-fill: " + ERROR_COLOR + "; -fx-font-size: 12;");
+                        btnLogin.setDisable(false);
+                        btnLogin.setText("🔐 Sign In");
+                    }
                 } else {
-                    new Alert(Alert.AlertType.ERROR, "Invalid Email or Password").show();
+                    msgLabel.setText("✗ Invalid email or password");
+                    msgLabel.setStyle("-fx-text-fill: " + ERROR_COLOR + "; -fx-font-size: 12;");
+                    passField.clear();
+                    btnLogin.setDisable(false);
+                    btnLogin.setText("🔐 Sign In");
                 }
+
             } catch (Exception ex) {
                 ex.printStackTrace();
-                new Alert(Alert.AlertType.ERROR, "Connection Error: " + ex.getMessage()).show();
+                msgLabel.setText("✗ Connection Error: " + ex.getMessage());
+                msgLabel.setStyle("-fx-text-fill: " + ERROR_COLOR + "; -fx-font-size: 12;");
+                btnLogin.setDisable(false);
+                btnLogin.setText("🔐 Sign In");
             }
         });
 
-        root.getChildren().addAll(title, emailField, passField, btnLogin);
-        Scene scene = new Scene(root, 300, 250);
-        primaryStage.setTitle("Login");
+        // Add spacer
+        VBox spacer = new VBox();
+        spacer.setPrefHeight(10);
+
+        // Add all components to form
+        formBox.getChildren().addAll(
+                emailLabel,
+                emailField,
+                passLabel,
+                passField,
+                spacer,
+                btnLogin,
+                msgLabel
+        );
+
+        // Add all to main
+        mainBox.getChildren().addAll(titleBox, formBox);
+
+        // Scene
+        Scene scene = new Scene(mainBox, 1000, 800);
+        primaryStage.setTitle("HR Management System - Login");
         primaryStage.setScene(scene);
+        primaryStage.centerOnScreen();
         primaryStage.show();
+    }
+
+    // ============ UTILITY METHODS ============
+
+    private Label createLabel(String text) {
+        Label label = new Label(text);
+        label.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
+        label.setTextFill(javafx.scene.paint.Color.web("#333333"));
+        return label;
+    }
+
+    private String getPrimaryButtonStyle() {
+        return "-fx-padding: 12 24 12 24; "
+                + "-fx-font-size: 13; "
+                + "-fx-font-weight: bold; "
+                + "-fx-background-color: " + PRIMARY_COLOR + "; "
+                + "-fx-text-fill: white; "
+                + "-fx-border-radius: 6; "
+                + "-fx-background-radius: 6; "
+                + "-fx-cursor: hand; "
+                + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 4, 0, 0, 2);";
+    }
+
+    private String getTextFieldStyle() {
+        return "-fx-padding: 10 15 10 15; "
+                + "-fx-border-color: #E0E0E0; "
+                + "-fx-border-width: 1.5; "
+                + "-fx-border-radius: 6; "
+                + "-fx-background-radius: 6; "
+                + "-fx-font-size: 12; "
+                + "-fx-focus-color: " + SECONDARY_COLOR + "; "
+                + "-fx-faint-focus-color: rgba(25, 118, 210, 0.1); "
+                + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 2, 0, 0, 1);";
     }
 }

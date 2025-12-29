@@ -1,33 +1,34 @@
 package com.hrmrmi.client.controller;
-
-import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-
+import com.hrmrmi.client.HRMServiceProxy;
 import com.hrmrmi.common.HRMService;
 import com.hrmrmi.common.model.Employee;
 import com.hrmrmi.common.model.Leave;
 import com.hrmrmi.common.model.Report;
-import com.hrmrmi.common.util.Config;
 import com.hrmrmi.client.SSLClientConfig;
+/**
+ * HRController acts as the client-side controller for HR administrative functions.
+ * It manages HR authentication state and delegates HR operations such as employee
+ * registration, leave approval, reporting, and staff management to remote HRM
+ * services through a fault-tolerant RMI proxy.
+ */
 
 public class HRController {
     private final HRMService service;
     private Employee loggedInHR;
 
-    public HRController() {
-        try {
-            SSLClientConfig.configure();
 
-            String rmiUrl = "rmi://" + Config.RMI_HOST + ":"
-                    + Config.RMI_PORT + "/"
-                    + Config.RMI_NAME;
-            service = (HRMService) Naming.lookup(rmiUrl);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to connect to HRM RMI Server", e);
-        }
+    public HRController() {
+        SSLClientConfig.configure();
+        
+        System.out.println(" Initializing HRController with dynamic failover...");
+        
+        // Use the dynamic proxy for automatic failover
+        service = new HRMServiceProxy();
+        
+        System.out.println(" HRController initialized with dynamic RMI proxy");
     }
 
     /**

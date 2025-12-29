@@ -1,20 +1,20 @@
-//package com.hrmrmi.client;
-//
-//import com.hrmrmi.common.HRMService;
-//import com.hrmrmi.common.util.Config;
-//import com.hrmrmi.server.HRMServiceImpl;
-//
-//import java.rmi.Naming;
-//
-//public class EmployeeClient {
-//    public static void main(String[] args) {
-//        try{
-//            HRMService service = (HRMService) Naming.lookup("rmi://localhost:" + Config.RMI_PORT + "/" + Config.RMI_NAME);
-//            boolean ok = service.login("admin","admin");
-//            System.out.println("Login result: " + ok);
-//
-//        }catch(Exception e){
-//            e.printStackTrace();
-//        }
-//    }
-//}
+
+package com.hrmrmi.client;
+
+import com.hrmrmi.client.gui.EmployeeGUI;
+import javafx.application.Application;
+/**
+ * EmployeeClient serves as the entry point for the HRM employee client application.
+ * It launches the JavaFX-based user interface that allows employees to interact
+ * with the HRM system through secure RMI communication.
+ */
+
+public class EmployeeClient {
+
+    public static void main(String[] args) {
+
+        // Launch Employee JavaFX application
+        Application.launch(EmployeeGUI.class, args);
+    }
+}
+

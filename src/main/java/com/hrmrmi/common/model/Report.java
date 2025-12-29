@@ -2,6 +2,7 @@ package com.hrmrmi.common.model;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 public class Report implements Serializable {
     @Serial
@@ -9,6 +10,10 @@ public class Report implements Serializable {
     private int reportId;
     private int employeeId;
     private String employeeName;
+
+    private Employee employeeProfile;
+    private List<FamilyDetails> familyDetails;
+    private List<Leave> leaveHistory;
     private int totalLeavesTaken;
     private int remainingLeaveBalance;
     private Date generatedDate;
@@ -16,14 +21,29 @@ public class Report implements Serializable {
 
     public Report() {}
 
-    public Report(int reportId, int employeeId, String employeeName,
+    public Report(int reportId, int employeeId, String employeeName, Employee employeeProfile,
+                  List<FamilyDetails> familyDetails, List<Leave> leaveHistory,
                   int totalLeavesTaken, int remainingLeaveBalance,
                   Date generatedDate, String generatedBy) {
         this.reportId = reportId;
         this.employeeId = employeeId;
         this.employeeName = employeeName;
+        this.employeeProfile = employeeProfile;
+        this.familyDetails = familyDetails;
+        this.leaveHistory = leaveHistory;
         this.totalLeavesTaken = totalLeavesTaken;
         this.remainingLeaveBalance = remainingLeaveBalance;
+        this.generatedDate = generatedDate;
+        this.generatedBy = generatedBy;
+    }
+
+    public Report(Employee employeeProfile, List<FamilyDetails> familyDetails,
+                  List<Leave> leaveHistory, int totalLeavesTaken,
+                  Date generatedDate, String generatedBy) {
+        this.employeeProfile = employeeProfile;
+        this.familyDetails = familyDetails;
+        this.leaveHistory = leaveHistory;
+        this.totalLeavesTaken = totalLeavesTaken;
         this.generatedDate = generatedDate;
         this.generatedBy = generatedBy;
     }
@@ -37,6 +57,10 @@ public class Report implements Serializable {
 
     public String getEmployeeName() { return employeeName; }
     public void setEmployeeName(String employeeName) { this.employeeName = employeeName; }
+
+    public Employee getEmployeeProfile() { return employeeProfile; }
+    public List<FamilyDetails> getFamilyDetails() { return familyDetails; }
+    public List<Leave> getLeaveHistory() { return leaveHistory; }
 
     public int getTotalLeavesTaken() { return totalLeavesTaken; }
     public void setTotalLeavesTaken(int totalLeavesTaken) { this.totalLeavesTaken = totalLeavesTaken; }

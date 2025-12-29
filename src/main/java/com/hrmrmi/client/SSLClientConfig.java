@@ -1,5 +1,12 @@
-package com.hrmrmi.client;
+/**
+ * SSLClientConfig initializes the client-side SSL configuration by
+ * loading the truststore required to validate the server’s SSL
+ * certificate, enabling secure Java RMI communication.
+ */
 
+
+
+package com.hrmrmi.client;
 import java.io.File;
 
 public class SSLClientConfig {
@@ -17,7 +24,7 @@ public class SSLClientConfig {
 
         if (trustStore.exists()) {
             System.out.println("Security TrustStore found at: " + path);
-            System.setProperty("javax,net.ssl.trustStore", path);
+            System.setProperty("javax.net.ssl.trustStore", path);
             System.setProperty("javax.net.ssl.trustStorePassword", "changeit");
         }
         else {
