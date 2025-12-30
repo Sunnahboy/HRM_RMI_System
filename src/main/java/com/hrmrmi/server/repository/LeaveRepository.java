@@ -6,7 +6,6 @@
  * while ensuring data consistency and rule enforcement.
  */
 
-
 package com.hrmrmi.server.repository;
 import com.hrmrmi.common.model.Leave;
 import com.hrmrmi.common.util.DBConnection;
@@ -17,9 +16,28 @@ import java.time.ZoneId;
 import java.time.DayOfWeek;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Date;
 
 @SuppressWarnings({"SqlDialectInspection","CallToPrintStackTrace"})
 public class LeaveRepository {
+
+    private int calculateTotalDays(Date startDate, Date endDate) {
+        if (startDate == null || endDate == null) return 0;
+
+        LocalDate start = convertToLocalDate(startDate);
+        LocalDate end = convertToLocalDate(endDate);
+
+        int days = 0;
+
+        while (!start.isAfter(end)) {
+            DayOfWeek day = start.getDayOfWeek();
+            if (day != DayOfWeek.SATURDAY && day != DayOfWeek.SUNDAY) {
+                days++;
+            }
+            start = start.plusDays(1);
+        }
+        return days;
+    }
 
     /**
      * Apply for leave with validations
@@ -54,8 +72,16 @@ public class LeaveRepository {
             return false;
         }
 
+        int days = calculateTotalDays(leave.getStartDate(), leave.getEndDate());
+        if (days <= 0) {
+            System.out.println("Rejected: Total business days is 0 (Weekends only selected?)");
+            return false;
+        }
+        System.out.println("Calculated Business Days: " + days);
+
+
         // All validations passed - insert
-        String sql = "INSERT INTO leaves (employeeId, startDate, endDate, status, reason) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO leaves (employeeId, startDate, endDate, status, reason, totalDays) VALUES (?, ?, ?, ?, ?, ?)";
 
         try(Connection conn = DBConnection.getConnection();
             PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -65,6 +91,7 @@ public class LeaveRepository {
             ps.setDate(3, new java.sql.Date(leave.getEndDate().getTime()));
             ps.setString(4, leave.getStatus());
             ps.setString(5, leave.getReason());
+            ps.setInt(6, days);
 
             int rowsAffected = ps.executeUpdate();
             System.out.println("   ✓ Leave applied successfully\n");
@@ -109,7 +136,7 @@ public class LeaveRepository {
         
         // First, check if any overlaps exist
         String countSql = "SELECT COUNT(*) as count FROM leaves WHERE employeeId = ? " +
-                "AND status != 'REJECTED' " +
+                "AND status != 'Rejected' " +
                 "AND startDate <= ? AND endDate >= ?";
 
         try (Connection conn = DBConnection.getConnection();
@@ -127,7 +154,7 @@ public class LeaveRepository {
                 if (count > 0) {
                     // If overlaps exist, get details
                     String detailSql = "SELECT startDate, endDate, status FROM leaves WHERE employeeId = ? " +
-                            "AND status != 'REJECTED' " +
+                            "AND status != 'Rejected' " +
                             "AND startDate <= ? AND endDate >= ?";
                     
                     try (PreparedStatement detailPs = conn.prepareStatement(detailSql)) {
@@ -152,57 +179,6 @@ public class LeaveRepository {
         return false;
     }
 
-    // ============ EXTENSION METHODS ============
-
-    /**
-     * Extend an existing leave with validation
-     */
-    public boolean extendLeave(int leaveId, int employeeId, java.sql.Date newEndDate) {
-        System.out.println("\n [REPO] extendLeave()");
-        System.out.println("   Leave ID: " + leaveId);
-        System.out.println("   Employee ID: " + employeeId);
-        System.out.println("   New End Date: " + newEndDate);
-
-        // Validation Step 1: Leave exists and belongs to employee
-        Leave leave = getLeaveById(leaveId);
-        if (leave == null) {
-            System.out.println("    Leave not found");
-            return false;
-        }
-
-        if (leave.getEmployeeId() != employeeId) {
-            System.out.println("    Leave does not belong to this employee");
-            return false;
-        }
-
-        // Validation Step 2: Leave status must be PENDING or APPROVED
-        if (!leave.getStatus().equals("PENDING") && !leave.getStatus().equals("APPROVED")) {
-            System.out.println("    Leave status is " + leave.getStatus() + " (cannot extend)");
-            return false;
-        }
-
-        // Validation Step 3: New end date must be after current end date
-        if (!newEndDate.after(leave.getEndDate())) {
-            System.out.println("    New end date must be after current end date (" + leave.getEndDate() + ")");
-            return false;
-        }
-
-        // Validation Step 4: New end date cannot include weekends
-        if (containsWeekend(leave.getStartDate(), newEndDate)) {
-            System.out.println("    Extended period includes weekends");
-            return false;
-        }
-
-        // Validation Step 5: Extension does not overlap another leave
-        if (overlapsOtherLeave(employeeId, leaveId, leave.getStartDate(), newEndDate)) {
-            System.out.println("    Extension overlaps with another leave");
-            return false;
-        }
-
-        // All validations passed - perform update
-        return updateLeaveEndDate(leaveId, newEndDate);
-    }
-
     /**
      * Get leave by ID
      */
@@ -222,28 +198,6 @@ public class LeaveRepository {
             System.err.println("Error fetching leave: " + e.getMessage());
         }
         return null;
-    }
-
-    /**
-     * Update leave end date
-     */
-    private boolean updateLeaveEndDate(int leaveId, java.sql.Date newEndDate) {
-        String sql = "UPDATE leaves SET endDate = ? WHERE leaveId = ?";
-
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setDate(1, newEndDate);
-            ps.setInt(2, leaveId);
-
-            int rowsAffected = ps.executeUpdate();
-            System.out.println("   ✓ Updated rows: " + rowsAffected);
-            return rowsAffected > 0;
-
-        } catch (SQLException e) {
-            System.err.println("Error updating leave: " + e.getMessage());
-            return false;
-        }
     }
 
     /**
@@ -334,16 +288,15 @@ public class LeaveRepository {
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                Leave leave = new Leave();
-                leave.setLeaveId(rs.getInt("leaveId"));
-                leave.setEmployeeId(rs.getInt("employeeId"));
+//                Leave leave = new Leave();
+//                leave.setLeaveId(rs.getInt("leaveId"));
+//                leave.setEmployeeId(rs.getInt("employeeId"));
+//                leave.setStartDate(rs.getDate("startDate"));
+//                leave.setEndDate(rs.getDate("endDate"));
+//                leave.setReason(rs.getString("reason"));
+//                leave.setStatus(rs.getString("status"));
 
-                leave.setStartDate(rs.getDate("startDate"));
-                leave.setEndDate(rs.getDate("endDate"));
-                leave.setReason(rs.getString("reason"));
-                leave.setStatus(rs.getString("status"));
-
-                list.add(leave);
+                list.add(mapLeave(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -360,18 +313,63 @@ public class LeaveRepository {
     }
 
     private boolean updateLeaveStatus(int leaveId, String status) {
-        String sql = "UPDATE leaves SET status = ? WHERE leaveId = ?";
+        String sql;
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        if ("Rejected".equalsIgnoreCase(status)) {
+            sql = "UPDATE leaves SET status = ?, totalDays = 0 WHERE leaveId = ?";
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, status);
-            ps.setInt(2, leaveId);
+                ps.setString(1, status);
+                ps.setInt(2, leaveId);
 
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+                return ps.executeUpdate() > 0;
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        else {
+            sql = "UPDATE leaves SET status = ? WHERE leaveId = ?";
+            Leave leave = getLeaveById(leaveId);
+            if(leave == null) return false;
+
+            Connection conn = null;
+            try {
+                conn = DBConnection.getConnection();
+                conn.setAutoCommit(false);
+
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+                    ps.setString(1, status);
+                    ps.setInt(2, leaveId);
+
+                    ps.executeUpdate();
+                }
+
+                String sqlBal = "UPDATE employees SET leaveBalance = leaveBalance - ? WHERE id = ?";
+                try (PreparedStatement ps = conn.prepareStatement(sqlBal)) {
+
+                    ps.setInt(1, leave.getTotalDays());
+                    ps.setInt(2, leave.getEmployeeId());
+
+                    ps.executeUpdate();
+                }
+
+                conn.commit();
+                System.out.println("Approved Leave " + leaveId + " and deducted " + leave.getTotalDays() + " days.");
+                return true;
+
+            }catch (SQLException e) {
+                e.printStackTrace();
+                return false;
+            } finally {
+                if (conn != null) try {
+                    conn.rollback();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -382,7 +380,8 @@ public class LeaveRepository {
                 rs.getDate("startDate"),
                 rs.getDate("endDate"),
                 rs.getString("reason"),
-                rs.getString("status")
+                rs.getString("status"),
+                rs.getInt("totalDays")
         );
     }
 }

@@ -194,23 +194,4 @@ public class HRMServiceImpl extends UnicastRemoteObject implements HRMService {
     public boolean updateEmployeeStatus(String employeeID, String newDept, String newPosition, double newSalary) throws RemoteException {
         return false;
     }
-
-
-    @Override
-    public boolean extendLeave(String employeeID, int leaveId, java.sql.Date newEndDate) throws RemoteException {
-        try {
-            int empId = Integer.parseInt(employeeID);
-            System.out.println("[SERVER] extendLeave() request");
-            System.out.println("   Employee: " + empId + " | Leave: " + leaveId + " | New end: " + newEndDate);
-
-            boolean result = leaveRepo.extendLeave(leaveId, empId, newEndDate);
-            System.out.println("   ✓ Result: " + result + "\n");
-            return result;
-        } catch (NumberFormatException e) {
-            System.out.println(" Invalid employee ID");
-            return false;
-        }
-    }
-
-
 }
