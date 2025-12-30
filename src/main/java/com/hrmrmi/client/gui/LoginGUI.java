@@ -1,6 +1,8 @@
-
 package com.hrmrmi.client.gui;
 
+import com.hrmrmi.client.EmployeeClient;
+import com.hrmrmi.client.HRClient;
+import com.hrmrmi.client.controller.EmployeeController;
 import com.hrmrmi.client.controller.HRController;
 import com.hrmrmi.common.model.Employee;
 import javafx.application.Application;
@@ -23,8 +25,12 @@ public class LoginGUI extends Application {
     private static final String BACKGROUND_COLOR = "#F5F5F5";
     private static final String CARD_BG = "#FFFFFF";
 
+    private Stage primaryStage;
+
     @Override
     public void start(Stage primaryStage) {
+        this.primaryStage = primaryStage;
+
         // Main Container
         VBox mainBox = new VBox(20);
         mainBox.setAlignment(Pos.CENTER);
@@ -36,11 +42,11 @@ public class LoginGUI extends Application {
         titleBox.setAlignment(Pos.CENTER);
         titleBox.setPadding(new Insets(0, 0, 30, 0));
 
-        Label title = new Label("🏢 HR Management System");
+        Label title = new Label("🏢 BHEL Employee System");
         title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 32));
         title.setTextFill(javafx.scene.paint.Color.web(PRIMARY_COLOR));
 
-        Label subtitle = new Label("Human Resource Management Portal");
+        Label subtitle = new Label("Employee Profile Management Portal");
         subtitle.setFont(Font.font("Segoe UI", 13));
         subtitle.setTextFill(javafx.scene.paint.Color.web("#888888"));
 
@@ -89,7 +95,6 @@ public class LoginGUI extends Application {
             String email = emailField.getText().trim();
             String pass = passField.getText();
 
-            // Validation
             if (email.isEmpty()) {
                 msgLabel.setText("✗ Email is required");
                 msgLabel.setStyle("-fx-text-fill: " + ERROR_COLOR + "; -fx-font-size: 12;");
@@ -113,26 +118,24 @@ public class LoginGUI extends Application {
                     Employee user = controller.getLoggedInHR();
 
                     if (user != null) {
-                        System.out.println("✓ Login successful for: " + user.getFirstName() + " " + user.getLastName());
-                        System.out.println("  Role: " + user.getRole());
-                        System.out.println("  Department: " + user.getDepartment());
-
                         msgLabel.setText("✓ Login successful! Redirecting...");
                         msgLabel.setStyle("-fx-text-fill: " + SUCCESS_COLOR + "; -fx-font-size: 12;");
 
-                        primaryStage.close();
+                        if (user.getRole().equals("HR")) {
+                            HRClient hrClient = new HRClient(user);
+                            hrClient.start(primaryStage);
+                        } else {
+                            EmployeeClient empClient = new EmployeeClient(user);
+                            empClient.start(primaryStage);
+                        }
 
-                        HRGUI dashboard = new HRGUI(user);
-                        dashboard.start(new Stage());
                     } else {
                         msgLabel.setText("✗ User profile not found");
-                        msgLabel.setStyle("-fx-text-fill: " + ERROR_COLOR + "; -fx-font-size: 12;");
                         btnLogin.setDisable(false);
                         btnLogin.setText("🔐 Sign In");
                     }
                 } else {
                     msgLabel.setText("✗ Invalid email or password");
-                    msgLabel.setStyle("-fx-text-fill: " + ERROR_COLOR + "; -fx-font-size: 12;");
                     passField.clear();
                     btnLogin.setDisable(false);
                     btnLogin.setText("🔐 Sign In");
@@ -141,17 +144,14 @@ public class LoginGUI extends Application {
             } catch (Exception ex) {
                 ex.printStackTrace();
                 msgLabel.setText("✗ Connection Error: " + ex.getMessage());
-                msgLabel.setStyle("-fx-text-fill: " + ERROR_COLOR + "; -fx-font-size: 12;");
                 btnLogin.setDisable(false);
                 btnLogin.setText("🔐 Sign In");
             }
         });
 
-        // Add spacer
         VBox spacer = new VBox();
         spacer.setPrefHeight(10);
 
-        // Add all components to form
         formBox.getChildren().addAll(
                 emailLabel,
                 emailField,
@@ -162,10 +162,8 @@ public class LoginGUI extends Application {
                 msgLabel
         );
 
-        // Add all to main
         mainBox.getChildren().addAll(titleBox, formBox);
 
-        // Scene
         Scene scene = new Scene(mainBox, 1000, 800);
         primaryStage.setTitle("HR Management System - Login");
         primaryStage.setScene(scene);

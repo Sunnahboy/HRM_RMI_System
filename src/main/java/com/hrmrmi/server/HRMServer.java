@@ -66,6 +66,8 @@ public class HRMServer {
             System.out.println("HRM RMI Server bound as " + Config.RMI_NAME + " on port " + Config.RMI_PORT +" at IP: " + Config.RMI_HOST);
             System.out.println("SSL Enabled");
 
+            performAnnualLeaveReset();
+
             Object lock = new Object();
             synchronized (lock) {
                 lock.wait();
@@ -74,6 +76,44 @@ public class HRMServer {
         }catch(Exception e){
             System.err.println("Server crashed: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private static void performAnnualLeaveReset() {
+        int currentYear = java.time.Year.now().getValue();
+        File flagFile = new File("last_reset_year.txt"); // Local file to track state
+        int lastResetYear = 0;
+
+        // 1. Check when we last reset
+        if (flagFile.exists()) {
+            try (java.util.Scanner scanner = new java.util.Scanner(flagFile)) {
+                if (scanner.hasNextInt()) lastResetYear = scanner.nextInt();
+            } catch (Exception e) { /* Ignore read errors */ }
+        }
+
+        // 2. new year, reset the database leaveBalance
+        if (currentYear > lastResetYear) {
+            System.out.println("New Year Detected (" + currentYear + ")! Resetting leave balances...");
+
+            // Assuming standard entitlement is 20 days
+            String sql = "UPDATE employees SET leaveBalance = 20";
+
+            try (java.sql.Connection conn = com.hrmrmi.common.util.DBConnection.getConnection();
+                 java.sql.Statement stmt = conn.createStatement()) {
+
+                int rows = stmt.executeUpdate(sql);
+                System.out.println("Annual Reset Complete. Updated " + rows + " employees.");
+
+                // 3. Save current year to file so we don't do it again this year
+                try (java.io.FileWriter writer = new java.io.FileWriter(flagFile)) {
+                    writer.write(String.valueOf(currentYear));
+                }
+            } catch (Exception e) {
+                System.err.println("Failed to perform annual reset: " + e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("Annual leave check: Balances are up-to-date for " + currentYear);
         }
     }
 }

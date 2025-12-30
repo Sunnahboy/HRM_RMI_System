@@ -50,7 +50,6 @@ public interface HRMService extends Remote{
     List<FamilyDetails> getFamilyDetails(String employeeID) throws RemoteException;
     boolean saveFamilyDetail(FamilyDetails details) throws RemoteException;
     boolean cleanupFamilyDetailDuplicates() throws RemoteException;
-    boolean extendLeave(String employeeID, int leaveId, java.sql.Date newEndDate) throws RemoteException;
 
 
 }

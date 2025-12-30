@@ -329,11 +329,6 @@ public class HRMServiceProxy implements HRMService {
         return executeWithFailover(HRMService::cleanupFamilyDetailDuplicates);
     }
     
-    @Override
-    public boolean extendLeave(String employeeID, int leaveId, java.sql.Date newEndDate) throws RemoteException {
-        return executeWithFailover(service -> service.extendLeave(employeeID, leaveId, newEndDate));
-    }
-    
     // Functional interface for operations
     @FunctionalInterface
     private interface FailoverOperation<T> {

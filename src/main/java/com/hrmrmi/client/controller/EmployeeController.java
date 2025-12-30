@@ -29,6 +29,11 @@ public class EmployeeController {
         System.out.println(" EmployeeController initialized with dynamic RMI proxy");
     }
 
+    public void setLoggedInEmployee(Employee employee) {
+        this.loggedInEmployee = employee;
+        System.out.println("   [Controller] User context set to: " + employee.getFirstName());
+    }
+
 
     /**
      * Login and cache the logged-in employee.
@@ -149,23 +154,4 @@ public class EmployeeController {
             return false;
         }
     }
-
-
-    public boolean extendLeave(int leaveId, java.sql.Date newEndDate) {
-        if (loggedInEmployee == null) return false;
-
-        try {
-            return service.extendLeave(
-                    String.valueOf(loggedInEmployee.getId()),
-                    leaveId,
-                    newEndDate
-            );
-        } catch (RemoteException e) {
-            System.err.println("RMI error while extending leave");
-            return false;
-        }
-    }
-
-
-
 }

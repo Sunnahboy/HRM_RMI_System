@@ -1,4 +1,3 @@
-
 package com.hrmrmi.client.gui;
 import com.hrmrmi.client.controller.EmployeeController;
 import com.hrmrmi.common.model.Employee;
@@ -24,7 +23,7 @@ import java.util.List;
 
 
 @SuppressWarnings({"unused","CallToPrintStackTrace"})
-public class EmployeeGUI extends Application {
+public class EmployeeGUI {//extends Application {
 
     private EmployeeController controller;
     private Employee loggedIn;
@@ -45,103 +44,31 @@ public class EmployeeGUI extends Application {
     private static final String BACKGROUND_COLOR = "#F5F5F5";
     private static final String CARD_BG = "#FFFFFF";
 
-    @Override
-    public void start(Stage stage) {
-        controller = new EmployeeController();
-        stage.setOnCloseRequest(e -> System.exit(0));
-        showLogin(stage);
-    }
+    public EmployeeGUI() { this.loggedIn = null; }
+    public EmployeeGUI(Employee user) { this.loggedIn = user; }
 
-    /* ================= LOGIN ================= */
+    public void show(Stage stage) {
+        try {
+            controller = new EmployeeController();
+        } catch (Exception e) {
+            new Alert(Alert.AlertType.ERROR, "Connection Failed: " + e.getMessage()).showAndWait();
+            return;
+        }
 
-    private void showLogin(Stage stage) {
-        // Logo/Title
-        Label title = new Label("Employee Portal");
-        title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 32));
-        title.setTextFill(javafx.scene.paint.Color.web(PRIMARY_COLOR));
-
-        Label subtitle = new Label("Human Resource Management System");
-        subtitle.setFont(Font.font("Segoe UI", 13));
-        subtitle.setTextFill(javafx.scene.paint.Color.web("#888888"));
-
-        // Input Fields
-        TextField emailField = new TextField();
-        emailField.setPromptText("Enter your email");
-        emailField.setStyle(getTextFieldStyle());
-        emailField.setPrefHeight(45);
-
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Enter your password");
-        passwordField.setStyle(getTextFieldStyle());
-        passwordField.setPrefHeight(45);
-
-        // Login Button
-        Button loginBtn = new Button("Sign In");
-        loginBtn.setStyle(getPrimaryButtonStyle());
-        loginBtn.setPrefWidth(250);
-        loginBtn.setPrefHeight(45);
-        loginBtn.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
-
-        // Error Message
-        Label msg = new Label();
-        msg.setStyle("-fx-text-fill: " + ERROR_COLOR + "; -fx-font-size: 12;");
-        msg.setWrapText(true);
-
-        // Form Container
-        VBox formBox = new VBox(16);
-        formBox.setPadding(new Insets(50));
-        formBox.setStyle("-fx-background-color: " + CARD_BG + "; "
-                + "-fx-border-color: #E0E0E0; -fx-border-radius: 12; "
-                + "-fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0, 0, 4);");
-        formBox.setMaxWidth(380);
-
-        formBox.getChildren().addAll(
-                createLabel("Email Address"),
-                emailField,
-                createLabel("Password"),
-                passwordField,
-                createSpacer(10),
-                loginBtn,
-                msg
-        );
-
-        // Title Container
-        VBox titleBox = new VBox(8, title, subtitle);
-        titleBox.setAlignment(Pos.CENTER);
-        titleBox.setPadding(new Insets(0, 0, 30, 0));
-
-        // Main Container
-        VBox mainBox = new VBox(20);
-        mainBox.setAlignment(Pos.CENTER);
-        mainBox.setPadding(new Insets(60));
-        mainBox.setStyle("-fx-background-color: " + BACKGROUND_COLOR + ";");
-        mainBox.getChildren().addAll(titleBox, formBox);
-
-        loginBtn.setOnAction(e -> {
-            if (validateLoginInputs(emailField, passwordField, msg)) {
-                loginBtn.setDisable(true);
-                loginBtn.setText("Signing in...");
-
-                boolean ok = controller.login(emailField.getText().trim(), passwordField.getText());
-                if (ok) {
-                    loggedIn = controller.getLoggedInEmployee();
-                    showDashboard(stage);
-                } else {
-                    msg.setText("✗ Invalid email or password");
-                    passwordField.clear();
-                    loginBtn.setDisable(false);
-                    loginBtn.setText("Sign In");
-                }
+        // SAFETY CHECK: If no user passed (e.g. run directly), go to Login
+        if (this.loggedIn == null) {
+            try {
+                new LoginGUI().start(stage);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        });
+            return;
+        }
 
-        stage.setScene(new Scene(mainBox, 1000, 800));
-        stage.setTitle("Employee Portal - Login");
-        stage.centerOnScreen();
-        stage.show();
+        // Initialize Controller with User and Show Dashboard
+        controller.setLoggedInEmployee(this.loggedIn);
+        showDashboard(stage);
     }
-
-    /* ================= DASHBOARD ================= */
 
     private void showDashboard(Stage stage) {
         TabPane tabs = new TabPane(
@@ -163,7 +90,6 @@ public class EmployeeGUI extends Application {
         stage.centerOnScreen();
     }
 
-    // Create header with instance variables
     private HBox header() {
         headerName = new Label("Welcome, " + loggedIn.getFirstName() + " " + loggedIn.getLastName());
         headerName.setFont(Font.font("Segoe UI", FontWeight.BOLD, 20));
@@ -175,7 +101,19 @@ public class EmployeeGUI extends Application {
 
         Button logoutBtn = new Button("🚪 Logout");
         logoutBtn.setStyle(getOutlineButtonStyle());
-        logoutBtn.setOnAction(e -> showLogin((Stage) logoutBtn.getScene().getWindow()));
+
+        // LOGOUT LOGIC: Close this window -> Open LoginGUI
+        logoutBtn.setOnAction(e -> {
+            // Close the current Employee Dashboard
+            ((Stage) logoutBtn.getScene().getWindow()).close();
+
+            // Open the Login Screen
+            try {
+                new LoginGUI().start(new Stage());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -610,6 +548,13 @@ public class EmployeeGUI extends Application {
             ));
 
             leaveTable.getItems().addAll(leaves);
+
+            Employee freshProfile = controller.viewProfile();
+            if(freshProfile != null) {
+                loggedIn = freshProfile;
+                updateHeader();
+                System.out.println("Header updated. New Balance: " + loggedIn.getLeaveBalance());
+            }
             refresh.setDisable(false);
         });
 
