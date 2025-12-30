@@ -125,8 +125,11 @@ public class HRMServiceImpl extends UnicastRemoteObject implements HRMService {
         emp.setPassportNumber(icPassport);
         emp.setDepartment(department);
         emp.setPosition(position);
-
-        emp.setRole("employee"); //  CONSISTENT ROLE
+        if (department != null && "HR".equalsIgnoreCase(department.trim())) {
+            emp.setRole("HR");
+        } else {
+            emp.setRole("employee");
+        }
         emp.setEmail(firstName.toLowerCase() + "." + lastName.toLowerCase() + "@company.com");
         emp.setLeaveBalance(20);
         emp.setSalary(2500);
