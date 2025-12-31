@@ -1,4 +1,3 @@
-
 /*
  * HRMServiceImpl provides the concrete server-side implementation of the HRMService
  * remote interface. It acts as the business logic layer in the RMI architecture,
@@ -12,6 +11,7 @@ import com.hrmrmi.common.model.Employee;
 import com.hrmrmi.common.model.FamilyDetails;
 import com.hrmrmi.common.model.Leave;
 import com.hrmrmi.common.model.Report;
+import com.hrmrmi.common.util.Config;
 import com.hrmrmi.server.repository.EmployeeRepository;
 import com.hrmrmi.server.repository.FamilyDetailRepository;
 import com.hrmrmi.server.repository.LeaveRepository;
@@ -32,7 +32,7 @@ public class HRMServiceImpl extends UnicastRemoteObject implements HRMService {
 
 
     public HRMServiceImpl() throws RemoteException {
-        super(); //  keep SSL disabled until fully tested
+        super(Config.RMI_PORT, SSLConfig.createClientFactory(), SSLConfig.createServerFactory());
 
         this.empRepo = new EmployeeRepository();
         this.leaveRepo = new LeaveRepository();
