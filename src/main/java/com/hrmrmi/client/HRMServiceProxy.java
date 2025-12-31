@@ -266,9 +266,9 @@ public class HRMServiceProxy implements HRMService {
     }
     
     @Override
-    public boolean registerEmployees(String firstName, String lastName, String IC_Passport, 
+    public boolean registerEmployees(String firstName, String lastName, String phoneNumber, String IC_Passport,
                                    String department, String position) throws RemoteException {
-        return executeWithFailover(service -> service.registerEmployees(firstName, lastName, IC_Passport, 
+        return executeWithFailover(service -> service.registerEmployees(firstName, lastName, phoneNumber, IC_Passport,
                                                                         department, position));
     }
     

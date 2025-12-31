@@ -1,4 +1,3 @@
-
 /*
  * HRMServiceImpl provides the concrete server-side implementation of the HRMService
  * remote interface. It acts as the business logic layer in the RMI architecture,
@@ -12,6 +11,7 @@ import com.hrmrmi.common.model.Employee;
 import com.hrmrmi.common.model.FamilyDetails;
 import com.hrmrmi.common.model.Leave;
 import com.hrmrmi.common.model.Report;
+import com.hrmrmi.common.util.Config;
 import com.hrmrmi.server.repository.EmployeeRepository;
 import com.hrmrmi.server.repository.FamilyDetailRepository;
 import com.hrmrmi.server.repository.LeaveRepository;
@@ -32,7 +32,7 @@ public class HRMServiceImpl extends UnicastRemoteObject implements HRMService {
 
 
     public HRMServiceImpl() throws RemoteException {
-        super(); //  keep SSL disabled until fully tested
+        super(Config.RMI_PORT, SSLConfig.createClientFactory(), SSLConfig.createServerFactory());
 
         this.empRepo = new EmployeeRepository();
         this.leaveRepo = new LeaveRepository();
@@ -73,7 +73,7 @@ public class HRMServiceImpl extends UnicastRemoteObject implements HRMService {
     public boolean applyLeave(String employeeID, Leave leave) throws RemoteException {
         try {
             int empId = Integer.parseInt(employeeID);
-            leave.setEmployeeId(empId); // 🔴 CRITICAL FIX
+            leave.setEmployeeId(empId);
             return leaveRepo.applyLeave(leave);
         } catch (NumberFormatException e) {
             System.out.println("Invalid employee ID");
@@ -90,7 +90,7 @@ public class HRMServiceImpl extends UnicastRemoteObject implements HRMService {
     public Employee viewProfile(String employeeID) throws RemoteException {
         try {
             int id = Integer.parseInt(employeeID);
-            return empRepo.getEmployeeById(id); // 🔴 FIXED
+            return empRepo.getEmployeeById(id);
         } catch (NumberFormatException e) {
             return null;
         }
@@ -111,24 +111,19 @@ public class HRMServiceImpl extends UnicastRemoteObject implements HRMService {
     /* ===================== HR ONLY ===================== */
 
     @Override
-    public boolean registerEmployees(
-            String firstName,
-            String lastName,
-            String icPassport,
-            String department,
-            String position
-    ) throws RemoteException {
+    public boolean registerEmployees(String firstName, String lastName, String phoneNumber, String icPassport, String department, String position) throws RemoteException {
 
         Employee emp = new Employee();
         emp.setFirstName(firstName);
         emp.setLastName(lastName);
+        emp.setPhoneNumber(phoneNumber);
         emp.setPassportNumber(icPassport);
         emp.setDepartment(department);
         emp.setPosition(position);
         if (department != null && "HR".equalsIgnoreCase(department.trim())) {
             emp.setRole("HR");
         } else {
-            emp.setRole("employee");
+            emp.setRole("EMPLOYEE");
         }
         emp.setEmail(firstName.toLowerCase() + "." + lastName.toLowerCase() + "@company.com");
         emp.setLeaveBalance(20);

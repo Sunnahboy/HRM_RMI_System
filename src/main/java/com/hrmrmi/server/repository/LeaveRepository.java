@@ -258,8 +258,6 @@ public class LeaveRepository {
                 .toLocalDate();
     }
 
-    // ============ EXISTING METHODS (UNCHANGED) ============
-
     public List<Leave> getLeavesByEmployee(int empId) {
         List<Leave> list = new ArrayList<>();
         String sql = "SELECT * FROM leaves WHERE employeeId = ? ORDER BY startDate DESC";
@@ -288,14 +286,6 @@ public class LeaveRepository {
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-//                Leave leave = new Leave();
-//                leave.setLeaveId(rs.getInt("leaveId"));
-//                leave.setEmployeeId(rs.getInt("employeeId"));
-//                leave.setStartDate(rs.getDate("startDate"));
-//                leave.setEndDate(rs.getDate("endDate"));
-//                leave.setReason(rs.getString("reason"));
-//                leave.setStatus(rs.getString("status"));
-
                 list.add(mapLeave(rs));
             }
         } catch (SQLException e) {
@@ -314,12 +304,10 @@ public class LeaveRepository {
 
     private boolean updateLeaveStatus(int leaveId, String status) {
         String sql;
-
         if ("Rejected".equalsIgnoreCase(status)) {
             sql = "UPDATE leaves SET status = ?, totalDays = 0 WHERE leaveId = ?";
             try (Connection conn = DBConnection.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql)) {
-
                 ps.setString(1, status);
                 ps.setInt(2, leaveId);
 
@@ -333,12 +321,10 @@ public class LeaveRepository {
             sql = "UPDATE leaves SET status = ? WHERE leaveId = ?";
             Leave leave = getLeaveById(leaveId);
             if(leave == null) return false;
-
             Connection conn = null;
             try {
                 conn = DBConnection.getConnection();
                 conn.setAutoCommit(false);
-
                 try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
                     ps.setString(1, status);
@@ -346,20 +332,16 @@ public class LeaveRepository {
 
                     ps.executeUpdate();
                 }
-
                 String sqlBal = "UPDATE employees SET leaveBalance = leaveBalance - ? WHERE id = ?";
                 try (PreparedStatement ps = conn.prepareStatement(sqlBal)) {
 
                     ps.setInt(1, leave.getTotalDays());
                     ps.setInt(2, leave.getEmployeeId());
-
                     ps.executeUpdate();
                 }
-
                 conn.commit();
                 System.out.println("Approved Leave " + leaveId + " and deducted " + leave.getTotalDays() + " days.");
                 return true;
-
             }catch (SQLException e) {
                 e.printStackTrace();
                 return false;

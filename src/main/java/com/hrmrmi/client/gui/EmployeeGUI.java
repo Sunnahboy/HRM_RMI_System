@@ -146,6 +146,11 @@ public class EmployeeGUI {//extends Application {
         lastName.setStyle(getTextFieldStyle());
         lastName.setPrefHeight(40);
 
+        String currentPhone = loggedIn.getPhoneNumber();
+        TextField phone = new TextField(loggedIn.getPhoneNumber());
+        phone.setStyle(getTextFieldStyle());
+        phone.setPrefHeight(40);
+
         TextField email = new TextField(loggedIn.getEmail());
         email.setStyle(getTextFieldStyle());
         email.setPrefHeight(40);
@@ -179,6 +184,7 @@ public class EmployeeGUI {//extends Application {
                 loggedIn = fresh;
                 firstName.setText(fresh.getFirstName());
                 lastName.setText(fresh.getLastName());
+                phone.setText(fresh.getPhoneNumber());
                 email.setText(fresh.getEmail());
                 dept.setText(fresh.getDepartment());
 
@@ -200,6 +206,7 @@ public class EmployeeGUI {//extends Application {
 
                 loggedIn.setFirstName(firstName.getText().trim());
                 loggedIn.setLastName(lastName.getText().trim());
+                loggedIn.setPhoneNumber(phone.getText());
 
                 boolean ok = controller.updateProfile(loggedIn);
 
@@ -209,6 +216,7 @@ public class EmployeeGUI {//extends Application {
                         loggedIn = fresh;
                         firstName.setText(fresh.getFirstName());
                         lastName.setText(fresh.getLastName());
+                        phone.setText(fresh.getPhoneNumber());
                         email.setText(fresh.getEmail());
                         dept.setText(fresh.getDepartment());
 
@@ -235,8 +243,9 @@ public class EmployeeGUI {//extends Application {
 
         grid.addRow(0, createLabel("First Name"), firstName);
         grid.addRow(1, createLabel("Last Name"), lastName);
-        grid.addRow(2, createLabel("Email Address"), email);
-        grid.addRow(3, createLabel("Department"), dept);
+        grid.addRow(2, createLabel("Phone Number"), phone);
+        grid.addRow(3, createLabel("Email Address"), email);
+        grid.addRow(4, createLabel("Department"), dept);
 
         HBox buttonBox = new HBox(12, save, refresh);
         grid.add(buttonBox, 1, 4);

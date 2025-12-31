@@ -263,6 +263,7 @@ public class ReportRepository {
                             rs.getInt("id"),
                             rs.getString("firstName"),
                             rs.getString("lastName"),
+                            rs.getString("phoneNumber"),
                             rs.getString("email"),
                             rs.getString("department"),
                             rs.getString("ic_passport_num"),
