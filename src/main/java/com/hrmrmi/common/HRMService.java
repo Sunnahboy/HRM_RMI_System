@@ -30,7 +30,7 @@ public interface HRMService extends Remote{
     String getUserPassword(String username) throws RemoteException;
 
     //HR func
-    boolean registerEmployees(String firstName, String lastName, String IC_Passport, String department, String position) throws RemoteException;
+    boolean registerEmployees(String firstName, String lastName, String phoneNumber, String IC_Passport, String department, String position) throws RemoteException;
 
     boolean approveLeave(String leaveID, String decision) throws RemoteException;
 

@@ -43,9 +43,9 @@ public class EmployeeRepository {
     public boolean registerEmployee(Employee emp) {
         String sql = """
                 INSERT INTO employees
-                (firstName, lastName, email, department, ic_passport_num,
+                (firstName, lastName, phoneNumber, email, department, ic_passport_num,
                  position, leaveBalance, salary, password, role)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
 
         try (Connection conn = DBConnection.getConnection();
@@ -53,14 +53,15 @@ public class EmployeeRepository {
 
             ps.setString(1, emp.getFirstName());
             ps.setString(2, emp.getLastName());
-            ps.setString(3, emp.getEmail());
-            ps.setString(4, emp.getDepartment());
-            ps.setString(5, emp.getPassportNumber());
-            ps.setString(6, emp.getPosition());
-            ps.setInt(7, emp.getLeaveBalance());
-            ps.setDouble(8, emp.getSalary());
-            ps.setString(9, emp.getPassword());
-            ps.setString(10, emp.getRole());
+            ps.setString(3, emp.getPhoneNumber());
+            ps.setString(4, emp.getEmail());
+            ps.setString(5, emp.getDepartment());
+            ps.setString(6, emp.getPassportNumber());
+            ps.setString(7, emp.getPosition());
+            ps.setInt(8, emp.getLeaveBalance());
+            ps.setDouble(9, emp.getSalary());
+            ps.setString(10, emp.getPassword());
+            ps.setString(11, emp.getRole());
 
             return ps.executeUpdate() > 0;
 
@@ -110,6 +111,7 @@ public class EmployeeRepository {
                         rs.getInt("id"),
                         rs.getString("firstName"),
                         rs.getString("lastName"),
+                        rs.getString("phoneNumber"),
                         rs.getString("email"),
                         rs.getString("department"),
                         rs.getString("ic_passport_num"),
@@ -133,6 +135,7 @@ public class EmployeeRepository {
                 UPDATE employees SET
                     firstName = ?,
                     lastName = ?,
+                    phoneNumber = ?,
                     email = ?,
                     department = ?,
                     ic_passport_num = ?,
@@ -147,13 +150,14 @@ public class EmployeeRepository {
 
             ps.setString(1, emp.getFirstName());
             ps.setString(2, emp.getLastName());
-            ps.setString(3, emp.getEmail());
-            ps.setString(4, emp.getDepartment());
-            ps.setString(5, emp.getPassportNumber());
-            ps.setString(6, emp.getPosition());
-            ps.setInt(7, emp.getLeaveBalance());
-            ps.setDouble(8, emp.getSalary());
-            ps.setInt(9, emp.getId());
+            ps.setString(3, emp.getPhoneNumber());
+            ps.setString(4, emp.getEmail());
+            ps.setString(5, emp.getDepartment());
+            ps.setString(6, emp.getPassportNumber());
+            ps.setString(7, emp.getPosition());
+            ps.setInt(8, emp.getLeaveBalance());
+            ps.setDouble(9, emp.getSalary());
+            ps.setInt(10, emp.getId());
 
             return ps.executeUpdate() > 0;
 
@@ -264,6 +268,7 @@ public class EmployeeRepository {
                 rs.getInt("id"),
                 rs.getString("firstName"),
                 rs.getString("lastName"),
+                rs.getString("phoneNumber"),
                 rs.getString("email"),
                 rs.getString("department"),
                 rs.getString("ic_passport_num"),

@@ -63,10 +63,18 @@ public class HRGUI {//extends Application {
         profileCard.setStyle("-fx-background-color: " + CARD_BG + "; -fx-border-color: #E0E0E0; -fx-border-radius: 12;");
 
         // Interactive Fields
-        TextField pfFirstName = createTextField(currentUser.getFirstName());
-        TextField pfLastName = createTextField(currentUser.getLastName());
-        TextField pfEmail = createTextField(currentUser.getEmail()); pfEmail.setDisable(true);
-        TextField pfDept = createTextField(currentUser.getDepartment()); pfDept.setDisable(true);
+        TextField pfFirstName = new TextField(currentUser.getFirstName());
+        pfFirstName.setStyle(getTextFieldStyle());
+        TextField pfLastName = new TextField(currentUser.getLastName());
+        pfLastName.setStyle(getTextFieldStyle());
+        TextField pfPhone = new TextField(currentUser.getPhoneNumber());
+        pfPhone.setStyle(getTextFieldStyle());
+        TextField pfEmail = new TextField(currentUser.getEmail());
+        pfEmail.setStyle(getTextFieldStyle());
+        pfEmail.setDisable(true);
+        TextField pfDept = new TextField(currentUser.getDepartment());
+        pfDept.setStyle(getTextFieldStyle());
+        pfDept.setDisable(true);
 
         Button btnSaveProfile = createPrimaryButton("💾 Update Profile");
         Button btnRefreshProfile = createSecondaryButton("🔄 Refresh");
@@ -76,6 +84,7 @@ public class HRGUI {//extends Application {
         btnSaveProfile.setOnAction(e -> {
             currentUser.setFirstName(pfFirstName.getText());
             currentUser.setLastName(pfLastName.getText());
+            currentUser.setPhoneNumber(pfPhone.getText());
 
             if (empController.updateProfile(currentUser)) {
                 profileMsg.setText("✓ Profile updated successfully");
@@ -94,6 +103,7 @@ public class HRGUI {//extends Application {
                 currentUser = fresh;
                 pfFirstName.setText(fresh.getFirstName());
                 pfLastName.setText(fresh.getLastName());
+                pfPhone.setText(fresh.getPhoneNumber());
                 profileMsg.setText("✓ Data refreshed");
             }
         });
@@ -102,8 +112,9 @@ public class HRGUI {//extends Application {
         pGrid.setHgap(15); pGrid.setVgap(15);
         pGrid.addRow(0, createLabel("First Name"), pfFirstName);
         pGrid.addRow(1, createLabel("Last Name"), pfLastName);
-        pGrid.addRow(2, createLabel("Email"), pfEmail);
-        pGrid.addRow(3, createLabel("Department"), pfDept);
+        pGrid.addRow(2, createLabel("Phone No."), pfPhone);
+        pGrid.addRow(3, createLabel("Email"), pfEmail);
+        pGrid.addRow(4, createLabel("Department"), pfDept);
 
         profileCard.getChildren().addAll(
                 createLabel("👤 My Profile Details"),
@@ -270,6 +281,7 @@ public class HRGUI {//extends Application {
 
             TextField fName = createTextField("First Name");
             TextField lName = createTextField("Last Name");
+            TextField phoneField = createTextField("Phone Number");
             TextField icNum = createTextField("Passport/IC Number");
             TextField deptField = createTextField("Department");
             TextField posField = createTextField("Position");
@@ -281,13 +293,13 @@ public class HRGUI {//extends Application {
             btnRegister.setOnAction(e -> {
                 try {
                     boolean success = controller.registerEmployees(
-                            fName.getText().trim(), lName.getText().trim(), icNum.getText().trim(),
-                            deptField.getText().trim(), posField.getText().trim()
+                            fName.getText().trim(), lName.getText().trim(), phoneField.getText().trim(),
+                            icNum.getText().trim(), deptField.getText().trim(), posField.getText().trim()
                     );
                     if(success) {
                         regMsg.setText("✓ Employee registered successfully");
                         regMsg.setStyle("-fx-text-fill: " + SUCCESS_COLOR + "; -fx-font-size: 12;");
-                        fName.clear(); lName.clear(); icNum.clear(); deptField.clear(); posField.clear();
+                        fName.clear(); lName.clear(); phoneField.clear(); icNum.clear(); deptField.clear(); posField.clear();
                     } else {
                         regMsg.setText("✗ Registration failed");
                         regMsg.setStyle("-fx-text-fill: " + ERROR_COLOR + "; -fx-font-size: 12;");
@@ -300,7 +312,7 @@ public class HRGUI {//extends Application {
 
             registerCard.getChildren().addAll(
                     createLabel("👥 New Employee Registration"),
-                    fName, lName, icNum, deptField, posField, btnRegister, regMsg
+                    fName, lName, phoneField, icNum, deptField, posField, btnRegister, regMsg
             );
             registerBox.getChildren().add(registerCard);
             tabPane.getTabs().add(new Tab("👥 Register", registerBox));
@@ -340,6 +352,10 @@ public class HRGUI {//extends Application {
             colLast.setCellValueFactory(new PropertyValueFactory<>("lastName"));
             colLast.setPrefWidth(100);
 
+            TableColumn<Employee, String> colPhone = new TableColumn<>("Phone");
+            colPhone.setCellValueFactory(new PropertyValueFactory<>("phoneNumber"));
+            colPhone.setPrefWidth(100);
+
             TableColumn<Employee, String> colDept = new TableColumn<>("Department");
             colDept.setCellValueFactory(new PropertyValueFactory<>("department"));
             colDept.setPrefWidth(120);
@@ -356,7 +372,7 @@ public class HRGUI {//extends Application {
             colSalary.setCellValueFactory(new PropertyValueFactory<>("salary"));
             colSalary.setPrefWidth(100);
 
-            table.getColumns().addAll(colId, colName, colLast, colDept, colRole, colEmail, colSalary);
+            table.getColumns().addAll(colId, colName, colLast, colPhone, colDept, colRole, colEmail, colSalary);
 
             Button btnFire = new Button("🚪 Terminate Employee");
             btnFire.setStyle(getDangerButtonStyle());
@@ -555,6 +571,7 @@ public class HRGUI {//extends Application {
                                     "--------------------\n" +
                                     "  Name       : %s %s\n" +
                                     "  ID         : %d\n" +
+                                    "  Phone No.  : %s\n" +
                                     "  IC/Passport: %s\n" +
                                     "  Department : %s\n" +
                                     "  Position   : %s\n" +
@@ -574,6 +591,7 @@ public class HRGUI {//extends Application {
                                     "============================================================",
                             emp.getFirstName(), emp.getLastName(),
                             emp.getId(),
+                            emp.getPhoneNumber(),
                             emp.getPassportNumber(),
                             emp.getDepartment(),
                             emp.getPosition(),
@@ -609,7 +627,7 @@ public class HRGUI {//extends Application {
         primaryStage.show();
     }
 
-    // --- NEW HEADER METHOD ---
+    // ---HEADER METHOD ---
     private HBox header() {
         Label headerName = new Label("Welcome, " + currentUser.getFirstName() + " " + currentUser.getLastName());
         headerName.setFont(Font.font("Segoe UI", FontWeight.BOLD, 20));

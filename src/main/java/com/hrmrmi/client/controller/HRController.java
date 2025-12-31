@@ -32,7 +32,7 @@ public class HRController {
     }
 
     /**
-     * HR login (returns Employee object representing HR user).
+     * login (returns Employee object representing user).
      */
     public boolean login(String username, String password) {
         try {
@@ -51,9 +51,9 @@ public class HRController {
     /**
      * Register a new employee.
      */
-    public boolean registerEmployees(String firstName, String lastName, String icPassport, String department, String position) {
+    public boolean registerEmployees(String firstName, String lastName, String phoneNumber, String icPassport, String department, String position) {
         try {
-            return service.registerEmployees(firstName, lastName, icPassport, department, position);
+            return service.registerEmployees(firstName, lastName, phoneNumber, icPassport, department, position);
         } catch (RemoteException e) {
             System.err.println("RMI error during employee registration");
             return false;

@@ -4,6 +4,7 @@ CREATE TABLE employees (
     id SERIAL PRIMARY KEY,
     firstName VARCHAR(50) NOT NULL,
     lastName VARCHAR(50) NOT NULL,
+    phoneNumber VARCHAR(20) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     department VARCHAR(50),
     ic_passport_num VARCHAR(50) NOT NULL,

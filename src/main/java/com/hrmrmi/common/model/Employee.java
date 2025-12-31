@@ -18,6 +18,7 @@ public class Employee implements Serializable {
     private int id;
     private String firstName;
     private String lastName;
+    private String phoneNumber;
     private String email;
     private String department;
     private String PassportNumber;
@@ -29,10 +30,11 @@ public class Employee implements Serializable {
 
     public Employee() {}//to safely rebuild objects when sending it across the network or reading from the database without needing to pass constructor argument manually
 
-    public Employee(int id, String firstName, String lastName, String email,String department,String PassportNumber, String position, int leaveBalance, double salary, String password, String role){
+    public Employee(int id, String firstName, String lastName, String phoneNumber, String email,String department,String PassportNumber, String position, int leaveBalance, double salary, String password, String role){
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
+        this.phoneNumber = phoneNumber;
         this.email = email;
         this.PassportNumber = PassportNumber;
         this.password = password;
@@ -50,6 +52,8 @@ public class Employee implements Serializable {
     public void setFirstName(String firstName) { this.firstName = firstName; }
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public String getDepartment() { return department; }
