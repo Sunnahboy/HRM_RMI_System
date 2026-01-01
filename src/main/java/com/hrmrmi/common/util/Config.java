@@ -81,7 +81,7 @@ public class Config {
     }
 
     // Backup RMI configuration
-    public static final int BACKUP_RMI_PORT = 54322;
+    public static final int BACKUP_RMI_PORT = 54324;
     public static final String BACKUP_RMI_NAME = "HRMServiceBackup";
 
     public static final String DB_URL = "jdbc:postgresql://localhost:5432/HRM_Service";
@@ -92,7 +92,7 @@ public class Config {
 
     public static final String DB_DRIVER = "org.postgresql.Driver";
 
-    public static final int RMI_PORT = 54321;
+    public static final int RMI_PORT = 54323;
     public static final String RMI_NAME = "HRMService";
 
     public static final String RMI_HOST = getProperty("RMI_HOST", "localhost");

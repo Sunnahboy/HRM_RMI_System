@@ -7,13 +7,14 @@
  */
 
 package com.hrmrmi.server.replication;
+import com.hrmrmi.common.util.Config;
 import com.hrmrmi.server.HRMServiceImpl;
 import java.io.File;
 @SuppressWarnings({"CallToPrintStackTrace"})
 public class BackupServer {
 
     // Backup RMI registry port (must differ from primary)
-    private static final int BACKUP_RMI_PORT = 54322;
+    //private static final int BACKUP_RMI_PORT = 54324;
     private static final String BACKUP_SERVICE_NAME = "HRMServiceBackup";
 
     public static void main(String[] args) {
@@ -29,22 +30,22 @@ public class BackupServer {
             // verifyDatabaseConnection();
 
             // 4. Create HRM service (stateless, DB-backed)
-            HRMServiceImpl service = new HRMServiceImpl();
+            HRMServiceImpl service = new HRMServiceImpl(Config.BACKUP_RMI_PORT);
 
             // 5. Create SSL-enabled registry and bind the service
             java.rmi.registry.Registry registry;
             try {
                 registry = java.rmi.registry.LocateRegistry.createRegistry(
-                    BACKUP_RMI_PORT,
+                    Config.BACKUP_RMI_PORT,
                     com.hrmrmi.server.SSLConfig.createClientFactory(),
                     com.hrmrmi.server.SSLConfig.createServerFactory()
                 );
-                System.out.println("✔ SSL-enabled Backup RMI Registry started on port " + BACKUP_RMI_PORT);
+                System.out.println("✔ SSL-enabled Backup RMI Registry started on port " + Config.BACKUP_RMI_PORT);
             } catch (Exception e) {
                 System.out.println("Backup registry already running or SSL-enabled registry failed: " + e.getMessage());
                 // Fallback: try to get existing registry with SSL
                 registry = java.rmi.registry.LocateRegistry.getRegistry(
-                    "localhost", BACKUP_RMI_PORT,
+                    "localhost", Config.BACKUP_RMI_PORT,
                     com.hrmrmi.server.SSLConfig.createClientFactory());
             }
             
@@ -52,7 +53,7 @@ public class BackupServer {
             String serviceName = BACKUP_SERVICE_NAME;
             registry.rebind(serviceName, service);
 
-            System.out.println("✔ Backup HRM Service bound at: rmi://localhost:" + BACKUP_RMI_PORT + "/" + BACKUP_SERVICE_NAME);
+            System.out.println("✔ Backup HRM Service bound at: rmi://localhost:" + Config.BACKUP_RMI_PORT + "/" + BACKUP_SERVICE_NAME);
             performAnnualLeaveReset();
             System.out.println("✔ Backup server READY with SSL ENABLED");
             System.out.println("======================================");

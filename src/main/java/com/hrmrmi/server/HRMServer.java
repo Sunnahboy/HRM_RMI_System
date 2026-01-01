@@ -40,7 +40,7 @@ public class HRMServer {
 
             System.setProperty("java.rmi.server.hostname", Config.RMI_HOST);
 
-            HRMServiceImpl service = new HRMServiceImpl();
+            HRMServiceImpl service = new HRMServiceImpl(Config.RMI_PORT);
 
             // Create SSL-enabled registry
             Registry registry;
