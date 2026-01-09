@@ -37,9 +37,9 @@ CREATE TABLE family_details (
     contact VARCHAR(20)
 );
 
--- 4. INSERT ADMIN USER (So you can log in immediately)
-INSERT INTO employees (firstName, lastName, email, department, ic_passport_num, position, password, role, salary)
-VALUES ('HR', 'Admin', 'HR.Admin@bhel.com', 'HR', '001122334455', 'Manager', 'admin123', 'HR', 5000);
+--Insert 1 HR and 1 employee into database for testing
+INSERT INTO employees (firstName, lastName, phoneNumber, email, department, ic_passport_num, position, password, role, salary)
+VALUES ('HR', 'Admin', '0123456789', 'HR.Admin@bhel.com', 'HR', '001122334455', 'Manager', 'admin123', 'HR', 5000);
 
-INSERT INTO employees (firstName, lastName, email, department, ic_passport_num, position, password, role, salary)
-VALUES ('John', 'Doe', 'john.doe@bhel.com', 'IT', '900101145678', 'Software Developer', 'password123', 'EMPLOYEE', 3500);
+INSERT INTO employees (firstName, lastName, phoneNumber, email, department, ic_passport_num, position, password, role, salary)
+VALUES ('John', 'Doe', '0198765432', 'john.doe@bhel.com', 'IT', '900101145678', 'Software Developer', 'password123', 'EMPLOYEE', 3500);
