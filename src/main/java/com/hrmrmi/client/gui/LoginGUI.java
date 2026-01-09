@@ -115,7 +115,7 @@ public class LoginGUI extends Application {
                 boolean ok = controller.login(email, pass);
 
                 if (ok) {
-                    Employee user = controller.getLoggedInHR();
+                    Employee user = controller.getLoggedIn();
 
                     if (user != null) {
                         msgLabel.setText("✓ Login successful! Redirecting...");

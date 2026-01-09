@@ -17,7 +17,7 @@ import com.hrmrmi.client.SSLClientConfig;
 
 public class HRController {
     private final HRMService service;
-    private Employee loggedInHR;
+    private Employee loggedIn;
 
 
     public HRController() {
@@ -36,16 +36,16 @@ public class HRController {
      */
     public boolean login(String username, String password) {
         try {
-            loggedInHR = service.login(username, password);
-            return loggedInHR != null;
+            loggedIn = service.login(username, password);
+            return loggedIn != null;
         } catch (RemoteException e) {
             System.err.println("RMI error during HR login");
             return false;
         }
     }
 
-    public Employee getLoggedInHR() {
-        return loggedInHR;
+    public Employee getLoggedIn() {
+        return loggedIn;
     }
 
     /**
